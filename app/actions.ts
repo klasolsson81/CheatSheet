@@ -117,20 +117,25 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
           maxResults: 2,
           searchDepth: 'advanced',
         }),
-        // Swedish-specific sources (if .se domain)
-        isSwedish ? tavilyClient.search(`${companyName} AB Allabolag årsredovisning omsättning resultat 2024`, {
+        // Swedish-specific sources - Multiple targeted searches for better accuracy
+        isSwedish ? tavilyClient.search(`"${companyName} AB" Allabolag omsättning vinst 2024`, {
+          maxResults: 4,
+          searchDepth: 'advanced',
+        }) : Promise.resolve(null),
+        isSwedish ? tavilyClient.search(`${companyName} site:allabolag.se årsredovisning`, {
           maxResults: 3,
           searchDepth: 'advanced',
         }) : Promise.resolve(null),
-        isSwedish ? tavilyClient.search(`${companyName} Bolagsverket finansiell rapport ekonomi`, {
+        isSwedish ? tavilyClient.search(`${companyName} AB Stockholm Göteborg Malmö omsättning resultat`, {
           maxResults: 2,
           searchDepth: 'advanced',
         }) : Promise.resolve(null),
-      ]).then(([general, allabolag, bolagsverket]) => {
+      ]).then(([general, allabolag1, allabolag2, citySearch]) => {
         const results = [];
         if (general?.results) results.push(...general.results.map((r: any) => `${r.title}: ${r.content}`));
-        if (allabolag?.results) results.push(...allabolag.results.map((r: any) => `[Allabolag] ${r.title}: ${r.content}`));
-        if (bolagsverket?.results) results.push(...bolagsverket.results.map((r: any) => `[Bolagsverket] ${r.title}: ${r.content}`));
+        if (allabolag1?.results) results.push(...allabolag1.results.map((r: any) => `[Allabolag] ${r.title}: ${r.content}`));
+        if (allabolag2?.results) results.push(...allabolag2.results.map((r: any) => `[Allabolag] ${r.title}: ${r.content}`));
+        if (citySearch?.results) results.push(...citySearch.results.map((r: any) => `[Swedish Registry] ${r.title}: ${r.content}`));
         return results.length > 0 ? results.join('\n') : 'No financial data found';
       }),
 
@@ -169,14 +174,25 @@ You are an elite B2B sales intelligence analyst. Your mission: Extract CONCISE, 
 
 🎯 CRITICAL: Keep ALL responses SHORT and PUNCHY. No fluff, no generic statements.
 
-🎯 ICE BREAKER RULES (VERY IMPORTANT):
-- Use the MOST RECENT activity (within last 2-4 weeks if possible, preferably current month)
-- SKIP generic PR posts, corporate announcements, or promotional content
-- Focus on PERSONAL insights, opinions, thought leadership, or company-specific developments
-- If you find a founder/CEO LinkedIn post from this month about a specific topic → USE THAT
-- If only old posts (3+ months) are found → mention recent company news/developments instead
-- Authenticity over recency: A 6-week-old personal insight beats yesterday's generic PR post
-- Format: Mention the specific person, topic, and timeframe (e.g., "Saw Nemanja's post last week about...")
+🎯 ICE BREAKER RULES (CRITICAL - READ CAREFULLY):
+- MAX LENGTH: 15-20 words. Be ruthlessly concise.
+- TONE: Conversational peer, not stalker. Sound natural, not like you copied LinkedIn.
+- RECENCY: Use MOST RECENT activity (2-4 weeks max, current month preferred)
+- SKIP: Generic PR, corporate announcements, promotional fluff
+- FOCUS: Personal insights, opinions, thought leadership, specific company developments
+- PRIORITY: Founder/CEO LinkedIn post from this month about specific topic → USE IT
+- FALLBACK: If no recent personal posts → mention recent company news instead
+- AUTHENTICITY > RECENCY: 6-week personal insight beats yesterday's generic PR
+
+GOOD EXAMPLES:
+✅ "Caught Nemanja's post on balancing speed vs. learning—how's that playing out in real sprints?"
+✅ "Saw the Dec HQ session in Gothenburg—curious how you measure impact beyond code output?"
+✅ "Noticed your team's take on psych safety in dev teams—resonates with what we're seeing too."
+
+BAD EXAMPLES (DO NOT USE):
+❌ "Saw Nemanja M.'s LinkedIn note about the Dec 13–14, 2025 weekend session at InFiNet Code HQ in Sisjön (Gothenburg)..." (too long, too detailed, sounds creepy)
+❌ "Congratulations on your recent announcement!" (generic, no substance)
+❌ "I read on your website that..." (boring, not social)
 
 Analysis Framework:
 1. **Summary** (1-2 sentences max): What they DO and their value prop
