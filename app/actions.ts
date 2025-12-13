@@ -12,6 +12,15 @@ interface AnalysisResult {
   company_tone: string;
 }
 
+interface ResearchData {
+  websiteContent: string;
+  leadership: string;
+  socialMedia: string;
+  news: string;
+  financials: string;
+  signals: string;
+}
+
 export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   // Validate API keys
   if (!process.env.OPENAI_API_KEY) {
@@ -22,7 +31,7 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
     throw new Error('TAVILY_API_KEY is not configured. Please add it to your environment variables.');
   }
 
-  // Initialize clients with validated keys
+  // Initialize clients
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
@@ -32,76 +41,127 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   });
 
   try {
-    // Step 1: Extract content from the URL using Tavily
-    const extractResult = await tavilyClient.extract([url]);
-
-    if (!extractResult || !extractResult.results || extractResult.results.length === 0) {
-      throw new Error('Failed to extract content from URL. Please check if the URL is accessible.');
-    }
-
-    let content = extractResult.results[0].rawContent || '';
-
-    // Extract company name from URL or content
+    // Extract company name from URL
     const urlMatch = url.match(/(?:https?:\/\/)?(?:www\.)?([^\/\.]+)/);
     const companyName = urlMatch ? urlMatch[1] : 'the company';
 
-    // Step 2: If content is sparse, enhance with Tavily search for news/updates
-    let additionalContext = '';
-    if (content.length < 500) {
-      try {
-        const searchQuery = `${companyName} recent news updates 2025`;
-        const searchResult = await tavilyClient.search(searchQuery, {
-          maxResults: 3,
-          searchDepth: 'advanced',
-        });
+    console.log(`🔍 Starting SMART research for: ${companyName}`);
 
-        if (searchResult && searchResult.results && searchResult.results.length > 0) {
-          additionalContext = '\n\nRecent News and Updates:\n' +
-            searchResult.results
-              .map(r => `- ${r.title}: ${r.content}`)
-              .join('\n');
-        }
-      } catch (searchError) {
-        console.error('Search enhancement failed:', searchError);
-        // Continue without additional context if search fails
-      }
-    }
+    // MULTI-SOURCE PARALLEL RESEARCH ENGINE
+    const [websiteData, leadershipData, socialData, newsData, financialData, signalsData] = await Promise.allSettled([
+      // 1. Website Content Extraction
+      tavilyClient.extract([url]).then(res => {
+        const content = res?.results?.[0]?.rawContent || '';
+        return content.length > 0 ? content : 'No content extracted';
+      }),
 
-    const fullContent = content + additionalContext;
+      // 2. Leadership & Key People Research
+      tavilyClient.search(`${companyName} CEO CTO CFO leadership team LinkedIn 2025`, {
+        maxResults: 3,
+        searchDepth: 'advanced',
+      }).then(res => {
+        if (!res.results || res.results.length === 0) return 'No leadership data found';
+        return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
+      }),
 
-    if (!fullContent || fullContent.trim().length === 0) {
-      throw new Error('Could not extract any content from the URL. Please try a different URL.');
-    }
+      // 3. Social Media & Personal Activity
+      tavilyClient.search(`${companyName} CEO LinkedIn Twitter post activity recent 2025`, {
+        maxResults: 2,
+        searchDepth: 'advanced',
+      }).then(res => {
+        if (!res.results || res.results.length === 0) return 'No social activity found';
+        return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
+      }),
 
-    // Step 3: Advanced AI Analysis with GPT-4
-    const systemPrompt = `You are an elite B2B sales intelligence analyst with deep expertise in enterprise sales strategy and company analysis.
+      // 4. Recent News & Press Releases
+      tavilyClient.search(`${companyName} news press release announcement 2025`, {
+        maxResults: 4,
+        searchDepth: 'advanced',
+      }).then(res => {
+        if (!res.results || res.results.length === 0) return 'No recent news found';
+        return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
+      }),
 
-Your mission: Analyze the provided company information and extract actionable sales intelligence that will help a B2B sales professional engage this prospect effectively.
+      // 5. Financial Results & Reports
+      tavilyClient.search(`${companyName} financial results quarterly earnings revenue 2025`, {
+        maxResults: 2,
+        searchDepth: 'advanced',
+      }).then(res => {
+        if (!res.results || res.results.length === 0) return 'No financial data found';
+        return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
+      }),
 
-Key Analysis Areas:
-1. **Company Summary**: Distill what the company DOES (not who they are) - focus on their core value proposition and business model.
-2. **Ice Breaker**: Craft a highly personalized, recent, and specific opening line based on latest news, blog posts, product launches, or company updates. Make it feel current and researched.
-3. **Pain Points**: Identify 3 specific business challenges or operational hurdles this company likely faces based on their industry, growth stage, and market position.
-4. **Sales Hooks**: Provide 2 compelling angles for how a sales professional could position value - tie these to the pain points and company goals.
-5. **Financial Signals**: Detect any indicators of growth (hiring, funding, expansion), cost pressures, or investment priorities.
-6. **Company Tone**: Characterize their brand voice and culture (e.g., "Formal/Conservative", "Innovative/Tech-forward", "Customer-centric/Friendly").
+      // 6. Growth Signals (Hiring, Funding, Expansion)
+      tavilyClient.search(`${companyName} hiring jobs funding expansion partnership 2025`, {
+        maxResults: 3,
+        searchDepth: 'advanced',
+      }).then(res => {
+        if (!res.results || res.results.length === 0) return 'No growth signals found';
+        return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
+      }),
+    ]);
 
-Output Format: Return ONLY valid JSON matching this exact structure:
+    // Aggregate all research data
+    const research: ResearchData = {
+      websiteContent: websiteData.status === 'fulfilled' ? websiteData.value : 'Failed to extract',
+      leadership: leadershipData.status === 'fulfilled' ? leadershipData.value : 'No data',
+      socialMedia: socialData.status === 'fulfilled' ? socialData.value : 'No data',
+      news: newsData.status === 'fulfilled' ? newsData.value : 'No data',
+      financials: financialData.status === 'fulfilled' ? financialData.value : 'No data',
+      signals: signalsData.status === 'fulfilled' ? signalsData.value : 'No data',
+    };
+
+    console.log('✅ Research complete, sending to AI...');
+
+    // ADVANCED AI ANALYSIS with GPT-5.2
+    const systemPrompt = `You are an elite B2B sales intelligence analyst. Your mission: Extract CONCISE, ACTIONABLE sales intelligence.
+
+🎯 CRITICAL: Keep ALL responses SHORT and PUNCHY. No fluff, no generic statements.
+
+Analysis Framework:
+1. **Summary** (1-2 sentences max): What they DO and their value prop
+2. **Ice Breaker** (1 sentence): Ultra-specific, recent, personal hook based on CEO/leadership social posts, news, or events
+3. **Pain Points** (3 bullet points, 5-10 words each): Specific operational/strategic challenges
+4. **Sales Hooks** (2 bullet points, 8-12 words each): Direct value propositions tied to pain points
+5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures
+6. **Company Tone** (2-4 words): Brand voice (e.g., "Formal Enterprise", "Innovative Startup")
+
+Output ONLY valid JSON:
 {
-  "summary": "Concise description of what the company does and their core business",
-  "ice_breaker": "Personalized, timely opening line based on recent developments",
+  "summary": "Brief, punchy summary",
+  "ice_breaker": "Specific, personal opener referencing recent activity",
   "pain_points": ["Challenge 1", "Challenge 2", "Challenge 3"],
-  "sales_hooks": ["Sales angle 1", "Sales angle 2"],
-  "financial_signals": "Indicators of financial health, growth, or investment focus",
-  "company_tone": "Brand voice and cultural characterization"
+  "sales_hooks": ["Hook 1", "Hook 2"],
+  "financial_signals": "Brief growth/financial status",
+  "company_tone": "Brand characterization"
 }
 
-Be specific, actionable, and insightful. Avoid generic observations.`;
+Use the multi-source research below. Prioritize RECENT, SPECIFIC insights over generic observations.`;
 
-    const userPrompt = `Analyze this company and provide sales intelligence:\n\nURL: ${url}\n\nContent:\n${fullContent}`;
+    const userPrompt = `Company: ${companyName} (${url})
+
+=== WEBSITE ===
+${research.websiteContent.slice(0, 3000)}
+
+=== LEADERSHIP & KEY PEOPLE ===
+${research.leadership.slice(0, 2000)}
+
+=== SOCIAL MEDIA ACTIVITY ===
+${research.socialMedia.slice(0, 1500)}
+
+=== RECENT NEWS & PRESS ===
+${research.news.slice(0, 2500)}
+
+=== FINANCIAL RESULTS ===
+${research.financials.slice(0, 1500)}
+
+=== GROWTH SIGNALS ===
+${research.signals.slice(0, 1500)}
+
+Analyze and provide sales intelligence.`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-5.2',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
@@ -118,20 +178,20 @@ Be specific, actionable, and insightful. Avoid generic observations.`;
 
     const analysis: AnalysisResult = JSON.parse(responseContent);
 
-    // Validate the structure
+    // Validate structure
     if (!analysis.summary || !analysis.ice_breaker || !analysis.pain_points ||
         !analysis.sales_hooks || !analysis.financial_signals || !analysis.company_tone) {
       throw new Error('AI returned incomplete analysis. Please try again.');
     }
 
+    console.log('🎉 Analysis complete!');
     return analysis;
 
   } catch (error) {
-    console.error('Analysis error:', error);
+    console.error('❌ Analysis error:', error);
 
-    // Provide more helpful error messages
     if (error instanceof Error) {
-      // If it's already a user-friendly error, throw it as-is
+      // User-friendly errors
       if (error.message.includes('API_KEY') ||
           error.message.includes('extract') ||
           error.message.includes('content') ||
@@ -139,7 +199,7 @@ Be specific, actionable, and insightful. Avoid generic observations.`;
         throw error;
       }
 
-      // Handle API-specific errors
+      // API errors
       if (error.message.includes('401') || error.message.includes('unauthorized')) {
         throw new Error('Invalid API key. Please check your OPENAI_API_KEY or TAVILY_API_KEY.');
       }
@@ -152,7 +212,6 @@ Be specific, actionable, and insightful. Avoid generic observations.`;
         throw new Error('Request timed out. Please try again.');
       }
 
-      // Generic fallback
       throw new Error(`Analysis failed: ${error.message}`);
     }
 

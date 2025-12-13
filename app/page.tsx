@@ -24,13 +24,14 @@ interface AnalysisResult {
 }
 
 const loadingMessages = [
-  'Searching web...',
-  'Reading company website...',
-  'Analyzing business model...',
-  'Finding sales hooks...',
-  'Detecting pain points...',
-  'Reading financial reports...',
-  'Identifying opportunities...',
+  'Extracting website content...',
+  'Researching leadership team...',
+  'Scanning social media activity...',
+  'Analyzing recent news...',
+  'Checking financial reports...',
+  'Detecting growth signals...',
+  'AI analyzing all sources...',
+  'Generating insights...',
 ];
 
 export default function Home() {
