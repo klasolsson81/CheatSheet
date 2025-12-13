@@ -1,13 +1,13 @@
 'use server';
 
 import OpenAI from 'openai';
-import { TavilyClient } from '@tavily/core';
+import { tavily } from '@tavily/core';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const tavily = new TavilyClient({
+const tavilyClient = tavily({
   apiKey: process.env.TAVILY_API_KEY || '',
 });
 
@@ -23,7 +23,7 @@ interface AnalysisResult {
 export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   try {
     // Step 1: Extract content from the URL using Tavily
-    const extractResult = await tavily.extract([url]);
+    const extractResult = await tavilyClient.extract([url]);
 
     if (!extractResult || !extractResult.results || extractResult.results.length === 0) {
       throw new Error('Failed to extract content from URL');
@@ -40,7 +40,7 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
     if (content.length < 500) {
       try {
         const searchQuery = `${companyName} recent news updates 2025`;
-        const searchResult = await tavily.search(searchQuery, {
+        const searchResult = await tavilyClient.search(searchQuery, {
           maxResults: 3,
           searchDepth: 'advanced',
         });
