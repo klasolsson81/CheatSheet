@@ -117,10 +117,10 @@ export default function Home() {
             <div className="relative flex items-center bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-slate-700/50 shadow-2xl overflow-hidden">
               <Search className="ml-6 w-6 h-6 text-cyan-400" />
               <input
-                type="url"
+                type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter company URL (e.g., https://company.com)"
+                placeholder="Enter company URL (e.g., stripe.com or https://stripe.com)"
                 className="flex-1 bg-transparent px-4 py-5 text-lg text-white placeholder-slate-500 outline-none"
                 disabled={loading}
               />
