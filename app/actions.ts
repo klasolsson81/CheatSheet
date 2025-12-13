@@ -36,6 +36,11 @@ function normalizeUrl(url: string): string {
   return `https://${trimmed}`;
 }
 
+// Detect if Swedish company (.se domain)
+function isSwedishCompany(url: string): boolean {
+  return url.includes('.se');
+}
+
 export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
   // Validate API keys
   if (!process.env.OPENAI_API_KEY) {
@@ -66,8 +71,9 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
     // Extract company name from URL
     const urlMatch = url.match(/(?:https?:\/\/)?(?:www\.)?([^\/\.]+)/);
     const companyName = urlMatch ? urlMatch[1] : 'the company';
+    const isSwedish = isSwedishCompany(url);
 
-    console.log(`🔍 Starting SMART research for: ${companyName} (${url})`);
+    console.log(`🔍 Starting SMART research for: ${companyName} (${url}) ${isSwedish ? '🇸🇪' : ''}`);
 
     // MULTI-SOURCE PARALLEL RESEARCH ENGINE
     const [websiteData, leadershipData, socialData, newsData, financialData, signalsData] = await Promise.allSettled([
@@ -78,17 +84,17 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
       }),
 
       // 2. Leadership & Key People Research
-      tavilyClient.search(`${companyName} CEO CTO CFO leadership team LinkedIn 2025`, {
-        maxResults: 3,
+      tavilyClient.search(`${companyName} CEO founder leadership team LinkedIn 2025`, {
+        maxResults: 4,
         searchDepth: 'advanced',
       }).then(res => {
         if (!res.results || res.results.length === 0) return 'No leadership data found';
         return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
       }),
 
-      // 3. Social Media & Personal Activity
-      tavilyClient.search(`${companyName} CEO LinkedIn Twitter post activity recent 2025`, {
-        maxResults: 2,
+      // 3. Social Media & Personal Activity (ENHANCED for recent, personal posts)
+      tavilyClient.search(`${companyName} LinkedIn post recent ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`, {
+        maxResults: 5,
         searchDepth: 'advanced',
       }).then(res => {
         if (!res.results || res.results.length === 0) return 'No social activity found';
@@ -104,13 +110,28 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
         return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
       }),
 
-      // 5. Financial Results & Reports
-      tavilyClient.search(`${companyName} financial results quarterly earnings revenue 2025`, {
-        maxResults: 2,
-        searchDepth: 'advanced',
-      }).then(res => {
-        if (!res.results || res.results.length === 0) return 'No financial data found';
-        return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
+      // 5. Financial Results & Reports (ENHANCED for Swedish companies)
+      Promise.all([
+        // General financial search
+        tavilyClient.search(`${companyName} financial results quarterly earnings revenue 2024 2025`, {
+          maxResults: 2,
+          searchDepth: 'advanced',
+        }),
+        // Swedish-specific sources (if .se domain)
+        isSwedish ? tavilyClient.search(`${companyName} AB Allabolag årsredovisning omsättning resultat 2024`, {
+          maxResults: 3,
+          searchDepth: 'advanced',
+        }) : Promise.resolve(null),
+        isSwedish ? tavilyClient.search(`${companyName} Bolagsverket finansiell rapport ekonomi`, {
+          maxResults: 2,
+          searchDepth: 'advanced',
+        }) : Promise.resolve(null),
+      ]).then(([general, allabolag, bolagsverket]) => {
+        const results = [];
+        if (general?.results) results.push(...general.results.map((r: any) => `${r.title}: ${r.content}`));
+        if (allabolag?.results) results.push(...allabolag.results.map((r: any) => `[Allabolag] ${r.title}: ${r.content}`));
+        if (bolagsverket?.results) results.push(...bolagsverket.results.map((r: any) => `[Bolagsverket] ${r.title}: ${r.content}`));
+        return results.length > 0 ? results.join('\n') : 'No financial data found';
       }),
 
       // 6. Growth Signals (Hiring, Funding, Expansion)
@@ -148,12 +169,21 @@ You are an elite B2B sales intelligence analyst. Your mission: Extract CONCISE, 
 
 🎯 CRITICAL: Keep ALL responses SHORT and PUNCHY. No fluff, no generic statements.
 
+🎯 ICE BREAKER RULES (VERY IMPORTANT):
+- Use the MOST RECENT activity (within last 2-4 weeks if possible, preferably current month)
+- SKIP generic PR posts, corporate announcements, or promotional content
+- Focus on PERSONAL insights, opinions, thought leadership, or company-specific developments
+- If you find a founder/CEO LinkedIn post from this month about a specific topic → USE THAT
+- If only old posts (3+ months) are found → mention recent company news/developments instead
+- Authenticity over recency: A 6-week-old personal insight beats yesterday's generic PR post
+- Format: Mention the specific person, topic, and timeframe (e.g., "Saw Nemanja's post last week about...")
+
 Analysis Framework:
 1. **Summary** (1-2 sentences max): What they DO and their value prop
 2. **Ice Breaker** (1 sentence): Ultra-specific, recent, personal hook based on CEO/leadership social posts, news, or events
 3. **Pain Points** (3 bullet points, 5-10 words each): Specific operational/strategic challenges
 4. **Sales Hooks** (2 bullet points, 8-12 words each): Direct value propositions tied to pain points
-5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures
+5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures. For Swedish companies, use Allabolag/Bolagsverket data if available.
 6. **Company Tone** (2-4 words): Brand voice (e.g., "Formal Enterprise", "Innovative Startup")
 
 Output ONLY valid JSON:
@@ -168,7 +198,7 @@ Output ONLY valid JSON:
 
 Use the multi-source research below. Prioritize RECENT, SPECIFIC insights over generic observations.`;
 
-    const userPrompt = `Company: ${companyName} (${url})
+    const userPrompt = `Company: ${companyName} (${url})${isSwedish ? ' [Swedish Company - Allabolag/Bolagsverket data included]' : ''}
 
 === WEBSITE (PRIMARY SOURCE - TRUST THIS) ===
 ${research.websiteContent.slice(0, 3000)}
@@ -176,14 +206,14 @@ ${research.websiteContent.slice(0, 3000)}
 === LEADERSHIP & KEY PEOPLE ===
 ${research.leadership.slice(0, 2000)}
 
-=== SOCIAL MEDIA ACTIVITY ===
-${research.socialMedia.slice(0, 1500)}
+=== SOCIAL MEDIA ACTIVITY (Prioritize recent, personal posts!) ===
+${research.socialMedia.slice(0, 2000)}
 
 === RECENT NEWS & PRESS ===
 ${research.news.slice(0, 2500)}
 
-=== FINANCIAL RESULTS ===
-${research.financials.slice(0, 1500)}
+=== FINANCIAL RESULTS ${isSwedish ? '(Including Allabolag/Bolagsverket)' : ''} ===
+${research.financials.slice(0, 2000)}
 
 === GROWTH SIGNALS ===
 ${research.signals.slice(0, 1500)}
