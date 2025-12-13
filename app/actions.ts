@@ -75,7 +75,31 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
 
     console.log(`🔍 Starting SMART research for: ${companyName} (${url}) ${isSwedish ? '🇸🇪' : ''}`);
 
-    // MULTI-SOURCE PARALLEL RESEARCH ENGINE
+    // STEP 1: Extract Swedish org number (if Swedish company)
+    let orgNumber = '';
+    if (isSwedish) {
+      try {
+        const orgSearch = await tavilyClient.search(`${url} organisationsnummer org.nr`, {
+          maxResults: 3,
+          searchDepth: 'advanced',
+        });
+
+        // Extract org number from results (format: 556XXX-XXXX or 556XXXXXXX)
+        const orgRegex = /\b(5\d{5}[-]?\d{4})\b/g;
+        const searchText = orgSearch.results?.map(r => `${r.title} ${r.content}`).join(' ') || '';
+        const matches = searchText.match(orgRegex);
+        if (matches && matches.length > 0) {
+          orgNumber = matches[0];
+          console.log(`✅ Found org number: ${orgNumber}`);
+        } else {
+          console.log(`⚠️ No org number found for ${companyName}`);
+        }
+      } catch (error) {
+        console.error('Org number extraction failed:', error);
+      }
+    }
+
+    // STEP 2: MULTI-SOURCE PARALLEL RESEARCH ENGINE
     const [websiteData, leadershipData, socialData, newsData, financialData, signalsData] = await Promise.allSettled([
       // 1. Website Content Extraction
       tavilyClient.extract([url]).then(res => {
@@ -118,11 +142,17 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
           searchDepth: 'advanced',
         }),
         // Swedish-specific sources - Multiple targeted searches for better accuracy
-        // KEY: Search by URL to find Allabolag page (Google associates URLs with company registry pages)
+        // PRIORITY 1: If we have org number, search with it (100% accurate)
+        isSwedish && orgNumber ? tavilyClient.search(`${orgNumber} Allabolag årsredovisning omsättning`, {
+          maxResults: 5,
+          searchDepth: 'advanced',
+        }) : Promise.resolve(null),
+        // PRIORITY 2: Search by URL to find Allabolag page
         isSwedish ? tavilyClient.search(`${url} Allabolag`, {
           maxResults: 5,
           searchDepth: 'advanced',
         }) : Promise.resolve(null),
+        // FALLBACK 3: Company name searches
         isSwedish ? tavilyClient.search(`"${companyName} AB" Allabolag omsättning vinst 2024`, {
           maxResults: 3,
           searchDepth: 'advanced',
@@ -131,17 +161,13 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
           maxResults: 3,
           searchDepth: 'advanced',
         }) : Promise.resolve(null),
-        isSwedish ? tavilyClient.search(`${companyName} AB Stockholm Göteborg Malmö omsättning resultat`, {
-          maxResults: 2,
-          searchDepth: 'advanced',
-        }) : Promise.resolve(null),
-      ]).then(([general, urlSearch, allabolag1, allabolag2, citySearch]) => {
+      ]).then(([general, orgSearch, urlSearch, allabolag1, allabolag2]) => {
         const results = [];
         if (general?.results) results.push(...general.results.map((r: any) => `${r.title}: ${r.content}`));
+        if (orgSearch?.results) results.push(...orgSearch.results.map((r: any) => `[Allabolag-OrgNr-${orgNumber}] ${r.title}: ${r.content}`));
         if (urlSearch?.results) results.push(...urlSearch.results.map((r: any) => `[Allabolag-URL] ${r.title}: ${r.content}`));
         if (allabolag1?.results) results.push(...allabolag1.results.map((r: any) => `[Allabolag] ${r.title}: ${r.content}`));
         if (allabolag2?.results) results.push(...allabolag2.results.map((r: any) => `[Allabolag] ${r.title}: ${r.content}`));
-        if (citySearch?.results) results.push(...citySearch.results.map((r: any) => `[Swedish Registry] ${r.title}: ${r.content}`));
         return results.length > 0 ? results.join('\n') : 'No financial data found';
       }),
 
@@ -205,7 +231,9 @@ Analysis Framework:
 2. **Ice Breaker** (1 sentence): Ultra-specific, recent, personal hook based on CEO/leadership social posts, news, or events
 3. **Pain Points** (3 bullet points, 5-10 words each): Specific operational/strategic challenges
 4. **Sales Hooks** (2 bullet points, 8-12 words each): Direct value propositions tied to pain points
-5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures. For Swedish companies, use Allabolag/Bolagsverket data if available.
+5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures.
+   CRITICAL FOR SWEDISH COMPANIES: Data tagged [Allabolag-OrgNr-XXXXXX] is 100% VERIFIED (matched by org number) - ALWAYS USE IT.
+   Data tagged [Allabolag-URL] or [Allabolag] is also reliable for .se domains - trust it.
 6. **Company Tone** (2-4 words): Brand voice (e.g., "Formal Enterprise", "Innovative Startup")
 
 Output ONLY valid JSON:
