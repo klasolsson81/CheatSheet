@@ -76,20 +76,37 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
     console.log(`🔍 Starting SMART research for: ${companyName} (${url}) ${isSwedish ? '🇸🇪' : ''}`);
 
     // STEP 1: Extract Swedish org number (if Swedish company)
+    // Try multiple search strategies in parallel for better success rate
     let orgNumber = '';
     if (isSwedish) {
       try {
-        const orgSearch = await tavilyClient.search(`${url} organisationsnummer org.nr`, {
-          maxResults: 3,
-          searchDepth: 'advanced',
-        });
+        const [urlSearch, nameSearch, bolagsverketSearch, allabolagSearch] = await Promise.allSettled([
+          tavilyClient.search(`${url} organisationsnummer`, { maxResults: 3, searchDepth: 'advanced' }),
+          tavilyClient.search(`"${companyName} AB" 556`, { maxResults: 3, searchDepth: 'advanced' }),
+          tavilyClient.search(`${url} bolagsverket`, { maxResults: 3, searchDepth: 'advanced' }),
+          tavilyClient.search(`allabolag.se ${companyName}`, { maxResults: 3, searchDepth: 'advanced' }),
+        ]);
+
+        // Combine all search results
+        const allResults = [
+          ...(urlSearch.status === 'fulfilled' && urlSearch.value.results ? urlSearch.value.results : []),
+          ...(nameSearch.status === 'fulfilled' && nameSearch.value.results ? nameSearch.value.results : []),
+          ...(bolagsverketSearch.status === 'fulfilled' && bolagsverketSearch.value.results ? bolagsverketSearch.value.results : []),
+          ...(allabolagSearch.status === 'fulfilled' && allabolagSearch.value.results ? allabolagSearch.value.results : []),
+        ];
 
         // Extract org number from results (format: 556XXX-XXXX or 556XXXXXXX)
         const orgRegex = /\b(5\d{5}[-]?\d{4})\b/g;
-        const searchText = orgSearch.results?.map(r => `${r.title} ${r.content}`).join(' ') || '';
+        const searchText = allResults.map(r => `${r.title} ${r.content}`).join(' ');
         const matches = searchText.match(orgRegex);
+
         if (matches && matches.length > 0) {
-          orgNumber = matches[0];
+          // Take the most common org number (in case multiple are found)
+          const orgCounts = matches.reduce((acc: any, num: string) => {
+            acc[num] = (acc[num] || 0) + 1;
+            return acc;
+          }, {});
+          orgNumber = Object.entries(orgCounts).sort((a: any, b: any) => b[1] - a[1])[0][0] as string;
           console.log(`✅ Found org number: ${orgNumber}`);
         } else {
           console.log(`⚠️ No org number found for ${companyName}`);
