@@ -75,54 +75,70 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
 
     console.log(`🔍 Starting SMART research for: ${companyName} (${url}) ${isSwedish ? '🇸🇪' : ''}`);
 
-    // STEP 1: Extract Swedish org number (if Swedish company)
-    // Try multiple search strategies in parallel for better success rate
+    // STEP 1: FAST - Extract website content (needed for both analysis and org number)
+    let websiteContent = '';
+    try {
+      const extractResult = await tavilyClient.extract([url]);
+      websiteContent = extractResult?.results?.[0]?.rawContent || '';
+    } catch (error) {
+      console.error('Website extraction failed:', error);
+    }
+
+    // STEP 2: Extract Swedish org number (if Swedish company)
+    // PRIORITY 1: Check website content first (fastest and most reliable)
+    // PRIORITY 2: If not found, search web with multiple strategies
     let orgNumber = '';
     if (isSwedish) {
-      try {
-        const [urlSearch, nameSearch, bolagsverketSearch, allabolagSearch] = await Promise.allSettled([
-          tavilyClient.search(`${url} organisationsnummer`, { maxResults: 3, searchDepth: 'advanced' }),
-          tavilyClient.search(`"${companyName} AB" 556`, { maxResults: 3, searchDepth: 'advanced' }),
-          tavilyClient.search(`${url} bolagsverket`, { maxResults: 3, searchDepth: 'advanced' }),
-          tavilyClient.search(`allabolag.se ${companyName}`, { maxResults: 3, searchDepth: 'advanced' }),
-        ]);
+      // Try to find org number directly in website content (footer, about page, etc.)
+      const orgRegex = /\b(5\d{5}[-]?\d{4})\b/g;
+      const websiteMatches = websiteContent.match(orgRegex);
 
-        // Combine all search results
-        const allResults = [
-          ...(urlSearch.status === 'fulfilled' && urlSearch.value.results ? urlSearch.value.results : []),
-          ...(nameSearch.status === 'fulfilled' && nameSearch.value.results ? nameSearch.value.results : []),
-          ...(bolagsverketSearch.status === 'fulfilled' && bolagsverketSearch.value.results ? bolagsverketSearch.value.results : []),
-          ...(allabolagSearch.status === 'fulfilled' && allabolagSearch.value.results ? allabolagSearch.value.results : []),
-        ];
+      if (websiteMatches && websiteMatches.length > 0) {
+        orgNumber = websiteMatches[0];
+        console.log(`✅ Found org number on website: ${orgNumber}`);
+      } else {
+        // Fallback: Search web if not found on website
+        console.log(`🔍 Org number not on website, searching web...`);
+        try {
+          const [urlSearch, nameSearch, bolagsverketSearch, allabolagSearch] = await Promise.allSettled([
+            tavilyClient.search(`${url} organisationsnummer`, { maxResults: 3, searchDepth: 'advanced' }),
+            tavilyClient.search(`"${companyName} AB" 556`, { maxResults: 3, searchDepth: 'advanced' }),
+            tavilyClient.search(`${url} bolagsverket`, { maxResults: 3, searchDepth: 'advanced' }),
+            tavilyClient.search(`allabolag.se ${companyName}`, { maxResults: 3, searchDepth: 'advanced' }),
+          ]);
 
-        // Extract org number from results (format: 556XXX-XXXX or 556XXXXXXX)
-        const orgRegex = /\b(5\d{5}[-]?\d{4})\b/g;
-        const searchText = allResults.map(r => `${r.title} ${r.content}`).join(' ');
-        const matches = searchText.match(orgRegex);
+          // Combine all search results
+          const allResults = [
+            ...(urlSearch.status === 'fulfilled' && urlSearch.value.results ? urlSearch.value.results : []),
+            ...(nameSearch.status === 'fulfilled' && nameSearch.value.results ? nameSearch.value.results : []),
+            ...(bolagsverketSearch.status === 'fulfilled' && bolagsverketSearch.value.results ? bolagsverketSearch.value.results : []),
+            ...(allabolagSearch.status === 'fulfilled' && allabolagSearch.value.results ? allabolagSearch.value.results : []),
+          ];
 
-        if (matches && matches.length > 0) {
-          // Take the most common org number (in case multiple are found)
-          const orgCounts = matches.reduce((acc: any, num: string) => {
-            acc[num] = (acc[num] || 0) + 1;
-            return acc;
-          }, {});
-          orgNumber = Object.entries(orgCounts).sort((a: any, b: any) => b[1] - a[1])[0][0] as string;
-          console.log(`✅ Found org number: ${orgNumber}`);
-        } else {
-          console.log(`⚠️ No org number found for ${companyName}`);
+          const searchText = allResults.map(r => `${r.title} ${r.content}`).join(' ');
+          const matches = searchText.match(orgRegex);
+
+          if (matches && matches.length > 0) {
+            // Take the most common org number
+            const orgCounts = matches.reduce((acc: any, num: string) => {
+              acc[num] = (acc[num] || 0) + 1;
+              return acc;
+            }, {});
+            orgNumber = Object.entries(orgCounts).sort((a: any, b: any) => b[1] - a[1])[0][0] as string;
+            console.log(`✅ Found org number via web search: ${orgNumber}`);
+          } else {
+            console.log(`⚠️ No org number found for ${companyName}`);
+          }
+        } catch (error) {
+          console.error('Org number web search failed:', error);
         }
-      } catch (error) {
-        console.error('Org number extraction failed:', error);
       }
     }
 
-    // STEP 2: MULTI-SOURCE PARALLEL RESEARCH ENGINE
+    // STEP 3: MULTI-SOURCE PARALLEL RESEARCH ENGINE
     const [websiteData, leadershipData, socialData, newsData, financialData, signalsData] = await Promise.allSettled([
-      // 1. Website Content Extraction
-      tavilyClient.extract([url]).then(res => {
-        const content = res?.results?.[0]?.rawContent || '';
-        return content.length > 0 ? content : 'No content extracted';
-      }),
+      // 1. Website Content (already extracted above, just return it)
+      Promise.resolve(websiteContent.length > 0 ? websiteContent : 'No content extracted'),
 
       // 2. Leadership & Key People Research
       tavilyClient.search(`${companyName} CEO founder leadership team LinkedIn 2025`, {
