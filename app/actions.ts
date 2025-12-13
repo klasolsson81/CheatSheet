@@ -3,14 +3,6 @@
 import OpenAI from 'openai';
 import { tavily } from '@tavily/core';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const tavilyClient = tavily({
-  apiKey: process.env.TAVILY_API_KEY || '',
-});
-
 interface AnalysisResult {
   summary: string;
   ice_breaker: string;
@@ -21,12 +13,30 @@ interface AnalysisResult {
 }
 
 export async function analyzeUrl(url: string): Promise<AnalysisResult> {
+  // Validate API keys
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured. Please add it to your environment variables.');
+  }
+
+  if (!process.env.TAVILY_API_KEY) {
+    throw new Error('TAVILY_API_KEY is not configured. Please add it to your environment variables.');
+  }
+
+  // Initialize clients with validated keys
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
+  const tavilyClient = tavily({
+    apiKey: process.env.TAVILY_API_KEY,
+  });
+
   try {
     // Step 1: Extract content from the URL using Tavily
     const extractResult = await tavilyClient.extract([url]);
 
     if (!extractResult || !extractResult.results || extractResult.results.length === 0) {
-      throw new Error('Failed to extract content from URL');
+      throw new Error('Failed to extract content from URL. Please check if the URL is accessible.');
     }
 
     let content = extractResult.results[0].rawContent || '';
@@ -53,10 +63,15 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
         }
       } catch (searchError) {
         console.error('Search enhancement failed:', searchError);
+        // Continue without additional context if search fails
       }
     }
 
     const fullContent = content + additionalContext;
+
+    if (!fullContent || fullContent.trim().length === 0) {
+      throw new Error('Could not extract any content from the URL. Please try a different URL.');
+    }
 
     // Step 3: Advanced AI Analysis with GPT-4
     const systemPrompt = `You are an elite B2B sales intelligence analyst with deep expertise in enterprise sales strategy and company analysis.
@@ -98,7 +113,7 @@ Be specific, actionable, and insightful. Avoid generic observations.`;
     const responseContent = completion.choices[0]?.message?.content;
 
     if (!responseContent) {
-      throw new Error('No response from AI');
+      throw new Error('No response from AI. Please try again.');
     }
 
     const analysis: AnalysisResult = JSON.parse(responseContent);
@@ -106,13 +121,41 @@ Be specific, actionable, and insightful. Avoid generic observations.`;
     // Validate the structure
     if (!analysis.summary || !analysis.ice_breaker || !analysis.pain_points ||
         !analysis.sales_hooks || !analysis.financial_signals || !analysis.company_tone) {
-      throw new Error('Invalid analysis structure');
+      throw new Error('AI returned incomplete analysis. Please try again.');
     }
 
     return analysis;
 
   } catch (error) {
     console.error('Analysis error:', error);
-    throw new Error(error instanceof Error ? error.message : 'Analysis failed');
+
+    // Provide more helpful error messages
+    if (error instanceof Error) {
+      // If it's already a user-friendly error, throw it as-is
+      if (error.message.includes('API_KEY') ||
+          error.message.includes('extract') ||
+          error.message.includes('content') ||
+          error.message.includes('AI')) {
+        throw error;
+      }
+
+      // Handle API-specific errors
+      if (error.message.includes('401') || error.message.includes('unauthorized')) {
+        throw new Error('Invalid API key. Please check your OPENAI_API_KEY or TAVILY_API_KEY.');
+      }
+
+      if (error.message.includes('429') || error.message.includes('rate limit')) {
+        throw new Error('API rate limit exceeded. Please try again in a few moments.');
+      }
+
+      if (error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please try again.');
+      }
+
+      // Generic fallback
+      throw new Error(`Analysis failed: ${error.message}`);
+    }
+
+    throw new Error('An unexpected error occurred. Please try again.');
   }
 }
