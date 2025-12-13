@@ -21,6 +21,7 @@ interface AnalysisResult {
   sales_hooks: string[];
   financial_signals: string;
   company_tone: string;
+  error?: string;
 }
 
 const loadingMessages = [
@@ -58,7 +59,14 @@ export default function Home() {
 
     try {
       const analysis = await analyzeUrl(url);
-      setResult(analysis);
+
+      // Check for NSFW content flag
+      if (analysis.error === 'NSFW_CONTENT') {
+        setError('Analysis blocked: Content flagged as unsafe.');
+        setResult(null);
+      } else {
+        setResult(analysis);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed');
     } finally {

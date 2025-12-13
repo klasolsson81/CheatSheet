@@ -10,6 +10,7 @@ interface AnalysisResult {
   sales_hooks: string[];
   financial_signals: string;
   company_tone: string;
+  error?: string;
 }
 
 interface ResearchData {
@@ -21,7 +22,21 @@ interface ResearchData {
   signals: string;
 }
 
-export async function analyzeUrl(url: string): Promise<AnalysisResult> {
+// URL Normalization - adds https:// if missing
+function normalizeUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+
+  // Check if URL already has a protocol
+  if (trimmed.match(/^https?:\/\//i)) {
+    return trimmed;
+  }
+
+  // Add https:// prefix
+  return `https://${trimmed}`;
+}
+
+export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
   // Validate API keys
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY is not configured. Please add it to your environment variables.');
@@ -29,6 +44,13 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
 
   if (!process.env.TAVILY_API_KEY) {
     throw new Error('TAVILY_API_KEY is not configured. Please add it to your environment variables.');
+  }
+
+  // Normalize URL (add https:// if missing)
+  const url = normalizeUrl(inputUrl);
+
+  if (!url) {
+    throw new Error('Please enter a valid URL.');
   }
 
   // Initialize clients
@@ -45,7 +67,7 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
     const urlMatch = url.match(/(?:https?:\/\/)?(?:www\.)?([^\/\.]+)/);
     const companyName = urlMatch ? urlMatch[1] : 'the company';
 
-    console.log(`🔍 Starting SMART research for: ${companyName}`);
+    console.log(`🔍 Starting SMART research for: ${companyName} (${url})`);
 
     // MULTI-SOURCE PARALLEL RESEARCH ENGINE
     const [websiteData, leadershipData, socialData, newsData, financialData, signalsData] = await Promise.allSettled([
@@ -113,8 +135,16 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
 
     console.log('✅ Research complete, sending to AI...');
 
-    // ADVANCED AI ANALYSIS with GPT-5.2
-    const systemPrompt = `You are an elite B2B sales intelligence analyst. Your mission: Extract CONCISE, ACTIONABLE sales intelligence.
+    // ADVANCED AI ANALYSIS with GPT-5.2 + SAFETY & GROUNDING
+    const systemPrompt = `SAFETY FIRST: Check the content. If it is Pornographic, Gambling, or Hate Speech -> Return JSON ONLY: { "error": "NSFW_CONTENT" }. Do not analyze.
+
+CRITICAL GROUNDING: You are analyzing the SPECIFIC URL provided.
+- Do NOT assume a similar-sounding name is a famous brand (e.g. 'klasolsson.se' is likely a personal site, NOT 'Clas Ohlson').
+- If the extracted website content is personal/sparse, trust that over the search results.
+- If content contradicts search results, prioritize website content.
+- Base your analysis on what the ACTUAL website says, not assumptions.
+
+You are an elite B2B sales intelligence analyst. Your mission: Extract CONCISE, ACTIONABLE sales intelligence.
 
 🎯 CRITICAL: Keep ALL responses SHORT and PUNCHY. No fluff, no generic statements.
 
@@ -140,7 +170,7 @@ Use the multi-source research below. Prioritize RECENT, SPECIFIC insights over g
 
     const userPrompt = `Company: ${companyName} (${url})
 
-=== WEBSITE ===
+=== WEBSITE (PRIMARY SOURCE - TRUST THIS) ===
 ${research.websiteContent.slice(0, 3000)}
 
 === LEADERSHIP & KEY PEOPLE ===
@@ -178,6 +208,19 @@ Analyze and provide sales intelligence.`;
 
     const analysis: AnalysisResult = JSON.parse(responseContent);
 
+    // Check for NSFW content flag
+    if (analysis.error === 'NSFW_CONTENT') {
+      return {
+        error: 'NSFW_CONTENT',
+        summary: '',
+        ice_breaker: '',
+        pain_points: [],
+        sales_hooks: [],
+        financial_signals: '',
+        company_tone: '',
+      };
+    }
+
     // Validate structure
     if (!analysis.summary || !analysis.ice_breaker || !analysis.pain_points ||
         !analysis.sales_hooks || !analysis.financial_signals || !analysis.company_tone) {
@@ -210,6 +253,11 @@ Analyze and provide sales intelligence.`;
 
       if (error.message.includes('timeout')) {
         throw new Error('Request timed out. Please try again.');
+      }
+
+      // Handle model not found error (if gpt-5.2 doesn't exist yet)
+      if (error.message.includes('model') && error.message.includes('does not exist')) {
+        throw new Error('GPT-5.2 is not available yet. Please contact support to update the model.');
       }
 
       throw new Error(`Analysis failed: ${error.message}`);
