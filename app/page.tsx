@@ -71,7 +71,10 @@ export default function Home() {
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden">
       {/* Animated background gradient */}
       <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-blue-950/20 to-purple-950/20" />
-      <div className="fixed inset-0 bg-[url('/grid.svg')] opacity-10" />
+      <div className="fixed inset-0 opacity-10" style={{
+        backgroundImage: 'linear-gradient(rgba(100, 116, 139, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(100, 116, 139, 0.1) 1px, transparent 1px)',
+        backgroundSize: '50px 50px'
+      }} />
 
       <div className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
         {/* Header */}
