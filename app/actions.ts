@@ -118,8 +118,13 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
           searchDepth: 'advanced',
         }),
         // Swedish-specific sources - Multiple targeted searches for better accuracy
+        // KEY: Search by URL to find Allabolag page (Google associates URLs with company registry pages)
+        isSwedish ? tavilyClient.search(`${url} Allabolag`, {
+          maxResults: 5,
+          searchDepth: 'advanced',
+        }) : Promise.resolve(null),
         isSwedish ? tavilyClient.search(`"${companyName} AB" Allabolag omsättning vinst 2024`, {
-          maxResults: 4,
+          maxResults: 3,
           searchDepth: 'advanced',
         }) : Promise.resolve(null),
         isSwedish ? tavilyClient.search(`${companyName} site:allabolag.se årsredovisning`, {
@@ -130,9 +135,10 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
           maxResults: 2,
           searchDepth: 'advanced',
         }) : Promise.resolve(null),
-      ]).then(([general, allabolag1, allabolag2, citySearch]) => {
+      ]).then(([general, urlSearch, allabolag1, allabolag2, citySearch]) => {
         const results = [];
         if (general?.results) results.push(...general.results.map((r: any) => `${r.title}: ${r.content}`));
+        if (urlSearch?.results) results.push(...urlSearch.results.map((r: any) => `[Allabolag-URL] ${r.title}: ${r.content}`));
         if (allabolag1?.results) results.push(...allabolag1.results.map((r: any) => `[Allabolag] ${r.title}: ${r.content}`));
         if (allabolag2?.results) results.push(...allabolag2.results.map((r: any) => `[Allabolag] ${r.title}: ${r.content}`));
         if (citySearch?.results) results.push(...citySearch.results.map((r: any) => `[Swedish Registry] ${r.title}: ${r.content}`));
