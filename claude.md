@@ -225,7 +225,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
-**Commit: `[pending]` - feat: add multi-language support (Swedish/English)**
+**Commit: `223e901` - feat: add multi-language support (Swedish/English)**
 - Created `translations.ts` with complete Swedish and English translations
 - Added language switcher with flags (🇸🇪 SV / 🇬🇧 EN) in top-right corner
 - Language preference saved in localStorage
