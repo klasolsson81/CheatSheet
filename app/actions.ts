@@ -387,8 +387,10 @@ Analysis Framework:
 3. **Pain Points** (3 bullet points, 5-10 words each): Specific operational/strategic challenges
 4. **Sales Hooks** (2 bullet points, 8-12 words each): Direct value propositions tied to pain points
 5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures.
-   CRITICAL FOR SWEDISH COMPANIES: Data tagged [Allabolag-OrgNr-XXXXXX] is 100% VERIFIED (matched by org number) - ALWAYS USE IT.
-   Data tagged [Allabolag-URL] or [Allabolag] is also reliable for .se domains - trust it.
+   CRITICAL FOR SWEDISH COMPANIES:
+   - Data tagged [Allabolag-OrgNr-XXXXXX] is 100% VERIFIED (matched by org number) - ALWAYS USE IT.
+   - Data under "=== GPT-VERIFIED SWEDISH DATA ===" is 100% VERIFIED from Allabolag - ALWAYS USE IT.
+   - Data tagged [Allabolag-URL] or [Allabolag] is also reliable for .se domains - trust it.
 6. **Company Tone** (2-4 words): Brand voice (e.g., "Formal Enterprise", "Innovative Startup")
 
 Output ONLY valid JSON:
@@ -403,7 +405,7 @@ Output ONLY valid JSON:
 
 Use the multi-source research below. Prioritize RECENT, SPECIFIC insights over generic observations.`;
 
-    const userPrompt = `Company: ${companyName} (${url})${isSwedish ? ' [Swedish Company - Allabolag/Bolagsverket data included]' : ''}
+    const userPrompt = `Company: ${companyName} (${url})${isSwedish ? ' [🇸🇪 Swedish Company - GPT-verified Allabolag data included below]' : ''}
 
 === WEBSITE (PRIMARY SOURCE - TRUST THIS) ===
 ${research.websiteContent.slice(0, 3000)}
@@ -417,8 +419,8 @@ ${research.socialMedia.slice(0, 2000)}
 === RECENT NEWS & PRESS ===
 ${research.news.slice(0, 2500)}
 
-=== FINANCIAL RESULTS ${isSwedish ? '(Including Allabolag/Bolagsverket)' : ''} ===
-${research.financials.slice(0, 2000)}
+=== FINANCIAL RESULTS ${isSwedish ? '(INCLUDES GPT-VERIFIED ALLABOLAG DATA BELOW)' : ''} ===
+${research.financials.slice(0, 4000)}
 
 === GROWTH SIGNALS ===
 ${research.signals.slice(0, 1500)}
