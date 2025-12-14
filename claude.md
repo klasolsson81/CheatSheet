@@ -242,6 +242,13 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
+**Commit: [PENDING] - improve: enhance source discovery and enforce quality over quantity**
+- Social Media search now uses `site:linkedin.com/posts` filter to find actual posts, not company pages
+- Increased maxResults: Social Media (5→10), News (4→8), Growth Signals (3→6)
+- Added MANDATORY SOURCE LINKING rule: Only create ice breakers where [SOURCE: url] tag exists
+- GPT now generates 1-2 quality ice breakers with sources instead of 3 with fake/missing sources
+- Better quality control: "If you only find 1-2 entries with sources, only generate 1-2 ice breakers"
+
 **Commit: `583614d` - improve: add explicit URL extraction instructions and debug logging**
 - Enhanced GPT prompt with CRITICAL SOURCE URL EXTRACTION section
 - Added concrete example: If research shows "[SOURCE: url] fact", extract that exact URL

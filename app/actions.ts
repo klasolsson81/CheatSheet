@@ -301,13 +301,13 @@ export async function analyzeUrl(
         return res.results.map(r => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
       }),
 
-      // 3. Social Media & Personal Activity (ENHANCED for targeted search)
+      // 3. Social Media & Personal Activity (ENHANCED for targeted search with site filter)
       tavilyClient.search(
         hasAdvanced && advancedParams.contactPerson
-          ? `${advancedParams.contactPerson} LinkedIn post ${advancedParams.specificFocus || ''} ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`
-          : `${companyName} ${targetContext} LinkedIn post recent ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`,
+          ? `site:linkedin.com/posts ${advancedParams.contactPerson} ${advancedParams.specificFocus || ''} ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`
+          : `site:linkedin.com/posts ${companyName} ${targetContext} ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`,
         {
-          maxResults: 5,
+          maxResults: 10,
           searchDepth: 'advanced',
         }
       ).then(res => {
@@ -317,7 +317,7 @@ export async function analyzeUrl(
 
       // 4. Recent News & Press Releases
       tavilyClient.search(`${companyName} news press release announcement 2025`, {
-        maxResults: 4,
+        maxResults: 8,
         searchDepth: 'advanced',
       }).then(res => {
         if (!res.results || res.results.length === 0) return 'No recent news found';
@@ -363,7 +363,7 @@ export async function analyzeUrl(
 
       // 6. Growth Signals (Hiring, Funding, Expansion)
       tavilyClient.search(`${companyName} hiring jobs funding expansion partnership 2025`, {
-        maxResults: 3,
+        maxResults: 6,
         searchDepth: 'advanced',
       }).then(res => {
         if (!res.results || res.results.length === 0) return 'No growth signals found';
@@ -420,7 +420,13 @@ You are an elite B2B sales intelligence analyst. Your mission: Extract CONCISE, 
 - PRIORITY: Founder/CEO LinkedIn post from this month about specific topic → USE IT
 - FALLBACK: If no recent personal posts → mention recent company news instead
 - AUTHENTICITY > RECENCY: 6-week personal insight beats yesterday's generic PR
-- SOURCE LINKING: The research data now includes [SOURCE: url] tags. You MUST use the specific URL from the [SOURCE: ...] tag that corresponds to the fact/post you are mentioning. Do NOT default to the main website if a specific deep link is available.
+- SOURCE LINKING (MANDATORY):
+  * The research data includes [SOURCE: url] tags
+  * You MUST use the specific URL from the [SOURCE: ...] tag that corresponds to the fact/post you mention
+  * Do NOT default to the main website if a specific deep link is available
+  * IMPORTANT: Only create ice breakers where you can find a specific [SOURCE: url] tag
+  * If you only find 1-2 entries with [SOURCE: ...] tags, only generate 1-2 ice breakers (better quality over quantity)
+  * Never create an ice breaker about a fact if you cannot find its [SOURCE: ...] tag
 
 GOOD EXAMPLES:
 ✅ "Caught Nemanja's post on balancing speed vs. learning—how's that playing out in real sprints?"
