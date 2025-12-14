@@ -149,12 +149,14 @@ Be strategic with your searches. You can make multiple search_web calls.`,
     } else {
       // GPT is done, extract final answer
       const finalAnswer = assistantMessage.content || '';
+      console.log(`📝 GPT final answer (${finalAnswer.length} chars): ${finalAnswer.slice(0, 300)}...`);
 
       // Extract org number from GPT's response
       const orgRegex = /\b(5\d{5}[-]?\d{4})\b/g;
       const orgMatches = finalAnswer.match(orgRegex);
       if (orgMatches) {
         orgNumber = orgMatches[0];
+        console.log(`🔢 Extracted org number from GPT response: ${orgNumber}`);
       }
 
       financialData = finalAnswer;
@@ -236,8 +238,15 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
 
         // Store GPT's financial findings
         gptFinancialData = gptResult.financialData;
+        console.log(`📊 GPT financial data length: ${gptFinancialData.length} characters`);
+        if (gptFinancialData) {
+          console.log(`📊 GPT financial data preview: ${gptFinancialData.slice(0, 200)}...`);
+        }
       } catch (error) {
-        console.error('GPT-driven search failed:', error);
+        console.error('❌ GPT-driven search failed:', error);
+        if (error instanceof Error) {
+          console.error('Error details:', error.message);
+        }
       }
     }
 
