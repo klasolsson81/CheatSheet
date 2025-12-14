@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
-  Sparkles,
   TrendingUp,
   Target,
   AlertCircle,
   DollarSign,
   MessageSquare,
   Loader2,
+  Radar,
+  Activity,
 } from 'lucide-react';
 import { analyzeUrl } from './actions';
 
@@ -133,31 +134,20 @@ export default function Home() {
       />
 
       <div className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
-        {/* Header */}
+        {/* Header - Tactical */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-16"
         >
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            >
-              <Sparkles className="w-10 h-10 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
-            </motion.div>
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent drop-shadow-2xl">
-              AI Sales Intelligence
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Radar className="w-7 h-7 text-emerald-500" strokeWidth={2.5} />
+            <h1 className="text-6xl font-bold tracking-widest text-white font-mono">
+              RECON
             </h1>
-            <motion.div
-              animate={{ rotate: -360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            >
-              <Sparkles className="w-10 h-10 text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
-            </motion.div>
           </div>
-          <p className="text-slate-400 text-xl font-light">
-            Unlock deep insights and sales opportunities from any company URL
+          <p className="text-slate-400 text-sm font-mono tracking-wide uppercase">
+            Tactical intelligence for your next deal
           </p>
         </motion.div>
 
@@ -170,35 +160,35 @@ export default function Home() {
           className="mb-16"
         >
           <div className="relative max-w-4xl mx-auto">
-            {/* Sharp Tech Input Container */}
-            <div className="flex items-center bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-slate-700 overflow-hidden h-16 focus-within:border-cyan-400 focus-within:shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-all duration-300">
-              <Search className="ml-6 w-7 h-7 text-slate-400 transition-colors" />
+            {/* Tactical Input Container */}
+            <div className="flex items-center bg-black/60 backdrop-blur-sm rounded-lg border border-slate-800 overflow-hidden h-14 focus-within:border-white transition-all duration-200">
+              <Search className="ml-5 w-5 h-5 text-slate-500" />
               <input
                 type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter company URL (e.g., stripe.com or https://stripe.com)"
-                className="flex-1 bg-transparent px-5 py-5 text-lg text-white placeholder-slate-500 outline-none"
+                placeholder="TARGET URL"
+                className="flex-1 bg-transparent px-4 py-4 text-base text-white placeholder-slate-600 outline-none font-mono tracking-wide"
                 disabled={loading}
               />
               <button
                 type="submit"
                 disabled={loading || !url.trim()}
-                className="m-2 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-xl font-semibold transition-all duration-200"
+                className="m-1.5 px-8 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:cursor-not-allowed rounded-md font-mono text-sm font-bold tracking-wider uppercase transition-all duration-200"
               >
-                {loading ? 'Analyzing...' : 'Analyze'}
+                {loading ? 'ANALYZING...' : 'EXECUTE'}
               </button>
             </div>
 
             {/* Advanced Search Toggle */}
-            <div className="relative z-20 mt-4 flex justify-center">
+            <div className="relative z-20 mt-3 flex justify-center">
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-500 hover:text-white transition-colors cursor-pointer font-mono tracking-wider uppercase"
               >
-                <span className="text-lg font-bold">{showAdvanced ? '−' : '+'}</span>
-                <span>Advanced Search (Target specific person/department)</span>
+                <span className="text-sm font-bold">{showAdvanced ? '[−]' : '[+]'}</span>
+                <span>Advanced Targeting</span>
               </button>
             </div>
 
@@ -212,15 +202,15 @@ export default function Home() {
                   transition={{ duration: 0.3 }}
                   className="relative z-10 mt-6 overflow-hidden"
                 >
-                  <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 space-y-4">
-                    <p className="text-sm text-slate-400 mb-4">
-                      Optional: Add details to target specific parts of large organizations (e.g., Volvo Gothenburg, VP of Engineering)
+                  <div className="bg-black/60 backdrop-blur-sm border border-slate-800 rounded-lg p-6 space-y-4">
+                    <p className="text-xs text-slate-500 mb-4 font-mono tracking-wide uppercase">
+                      Optional: Target specific contacts or departments within large organizations
                     </p>
 
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Contact Person */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                        <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
                           Contact Person
                         </label>
                         <input
@@ -228,14 +218,14 @@ export default function Home() {
                           value={contactPerson}
                           onChange={(e) => setContactPerson(e.target.value)}
                           placeholder="e.g., John Smith or LinkedIn URL"
-                          className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
 
                       {/* Job Title */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                        <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
                           Job Title
                         </label>
                         <input
@@ -243,14 +233,14 @@ export default function Home() {
                           value={jobTitle}
                           onChange={(e) => setJobTitle(e.target.value)}
                           placeholder="e.g., VP of Engineering, Head of Sales"
-                          className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
 
                       {/* Department */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                        <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
                           Department/Division
                         </label>
                         <input
@@ -258,14 +248,14 @@ export default function Home() {
                           value={department}
                           onChange={(e) => setDepartment(e.target.value)}
                           placeholder="e.g., Marketing, R&D, Sales"
-                          className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
 
                       {/* Location */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                        <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
                           Location/Office
                         </label>
                         <input
@@ -273,14 +263,14 @@ export default function Home() {
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
                           placeholder="e.g., Gothenburg, Stockholm, Germany"
-                          className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
 
                       {/* Specific Focus */}
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                        <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
                           Specific Focus/Interest
                         </label>
                         <input
@@ -288,7 +278,7 @@ export default function Home() {
                           value={specificFocus}
                           onChange={(e) => setSpecificFocus(e.target.value)}
                           placeholder="e.g., sustainability, digitalization, AI transformation"
-                          className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
@@ -309,13 +299,13 @@ export default function Home() {
               exit={{ opacity: 0, y: -20 }}
               className="flex flex-col items-center justify-center py-20"
             >
-              <Loader2 className="w-16 h-16 text-cyan-400 animate-spin mb-6 drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]" />
+              <Loader2 className="w-16 h-16 text-emerald-500 animate-spin mb-6" />
               <motion.p
                 key={loadingMessage}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="text-xl text-slate-300"
+                className="text-sm text-slate-400 font-mono tracking-wider uppercase"
               >
                 {loadingMessage}
               </motion.p>
@@ -323,17 +313,17 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* Error State - Sharp Tech */}
+        {/* Error State */}
         <AnimatePresence>
           {error && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="max-w-2xl mx-auto mb-8 p-6 bg-slate-900/80 backdrop-blur-sm border border-red-500/40 rounded-2xl flex items-center gap-4 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
+              className="max-w-2xl mx-auto mb-8 p-6 bg-black/60 backdrop-blur-sm border border-red-500 rounded-lg flex items-center gap-4"
             >
-              <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0" />
-              <p className="text-red-200">{error}</p>
+              <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
+              <p className="text-white font-mono text-sm">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -348,48 +338,42 @@ export default function Home() {
               exit="hidden"
               className="space-y-6"
             >
-              {/* Ice Breaker - Blue Sharp Tech Card */}
+              {/* Ice Breaker */}
               <motion.div variants={cardVariants}>
-                <div className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/40 rounded-2xl p-8 shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all duration-300">
+                <div className="bg-black/60 backdrop-blur-sm border border-white rounded-lg p-8 transition-all duration-300">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="p-3 bg-blue-500/10 rounded-xl">
-                      <MessageSquare className="w-8 h-8 text-blue-400" />
-                    </div>
-                    <h2 className="text-3xl font-bold text-blue-400">
+                    <MessageSquare className="w-7 h-7 text-emerald-500" strokeWidth={2} />
+                    <h2 className="text-2xl font-bold text-white font-mono tracking-wider uppercase">
                       Perfect Ice Breaker
                     </h2>
                   </div>
-                  <p className="text-xl text-white leading-relaxed">{result.ice_breaker}</p>
+                  <p className="text-lg text-white leading-relaxed">{result.ice_breaker}</p>
                 </div>
               </motion.div>
 
-              {/* Company Overview - Blue Sharp Tech Card */}
+              {/* Company Overview */}
               <motion.div variants={cardVariants}>
-                <div className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/40 rounded-2xl p-6 shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all duration-300">
+                <div className="bg-black/60 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-300">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-blue-500/10 rounded-lg">
-                      <Target className="w-7 h-7 text-blue-400" />
-                    </div>
-                    <h3 className="text-xl font-bold text-blue-400">Company Overview</h3>
+                    <Target className="w-6 h-6 text-emerald-500" strokeWidth={2} />
+                    <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Company Overview</h3>
                   </div>
                   <p className="text-slate-300 leading-relaxed">{result.summary}</p>
                 </div>
               </motion.div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Sales Hooks - Green Sharp Tech Card */}
+                {/* Sales Hooks */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900/80 backdrop-blur-sm border border-green-500/40 rounded-2xl p-6 shadow-[0_0_15px_rgba(34,197,94,0.15)] transition-all duration-300">
+                  <div className="bg-black/60 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-green-500/10 rounded-lg">
-                        <TrendingUp className="w-7 h-7 text-green-400" />
-                      </div>
-                      <h3 className="text-xl font-bold text-green-400">Sales Hooks</h3>
+                      <TrendingUp className="w-6 h-6 text-emerald-500" strokeWidth={2} />
+                      <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Sales Hooks</h3>
                     </div>
                     <ul className="space-y-3">
                       {result.sales_hooks.map((hook, idx) => (
                         <li key={idx} className="flex items-start gap-3">
-                          <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0" />
+                          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0" />
                           <span className="text-slate-300">{hook}</span>
                         </li>
                       ))}
@@ -397,19 +381,17 @@ export default function Home() {
                   </div>
                 </motion.div>
 
-                {/* Pain Points - Red Sharp Tech Card */}
+                {/* Pain Points */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900/80 backdrop-blur-sm border border-red-500/40 rounded-2xl p-6 shadow-[0_0_15px_rgba(239,68,68,0.15)] transition-all duration-300">
+                  <div className="bg-black/60 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-red-500/10 rounded-lg">
-                        <AlertCircle className="w-7 h-7 text-red-400" />
-                      </div>
-                      <h3 className="text-xl font-bold text-red-400">Pain Points</h3>
+                      <AlertCircle className="w-6 h-6 text-emerald-500" strokeWidth={2} />
+                      <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Pain Points</h3>
                     </div>
                     <ul className="space-y-3">
                       {result.pain_points.map((point, idx) => (
                         <li key={idx} className="flex items-start gap-3">
-                          <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0" />
+                          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0" />
                           <span className="text-slate-300">{point}</span>
                         </li>
                       ))}
@@ -419,27 +401,23 @@ export default function Home() {
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Financial Signals - Purple Sharp Tech Card */}
+                {/* Financial Signals */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900/80 backdrop-blur-sm border border-purple-500/40 rounded-2xl p-6 shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all duration-300">
+                  <div className="bg-black/60 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-purple-500/10 rounded-lg">
-                        <DollarSign className="w-7 h-7 text-purple-400" />
-                      </div>
-                      <h3 className="text-xl font-bold text-purple-400">Financial Signals</h3>
+                      <DollarSign className="w-6 h-6 text-emerald-500" strokeWidth={2} />
+                      <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Financial Signals</h3>
                     </div>
                     <p className="text-slate-300 leading-relaxed">{result.financial_signals}</p>
                   </div>
                 </motion.div>
 
-                {/* Company Tone - Purple Sharp Tech Card */}
+                {/* Company Tone */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900/80 backdrop-blur-sm border border-purple-500/40 rounded-2xl p-6 shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all duration-300">
+                  <div className="bg-black/60 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-purple-500/10 rounded-lg">
-                        <Sparkles className="w-7 h-7 text-purple-400" />
-                      </div>
-                      <h3 className="text-xl font-bold text-purple-400">Company Tone</h3>
+                      <Activity className="w-6 h-6 text-emerald-500" strokeWidth={2} />
+                      <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Company Tone</h3>
                     </div>
                     <p className="text-slate-300 leading-relaxed">{result.company_tone}</p>
                   </div>
@@ -448,6 +426,13 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Footer */}
+        <footer className="mt-20 pt-8 border-t border-slate-800">
+          <p className="text-center text-xs text-slate-500 font-mono tracking-wider uppercase">
+            System Status: Online // Powered by Intelligence Engine
+          </p>
+        </footer>
       </div>
     </div>
   );
