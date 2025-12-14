@@ -232,7 +232,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
-**Commit: `[pending]` - feat: AI generates content in selected language**
+**Commit: `d9afb27` - feat: AI generates content in selected language**
 - Added language parameter to `analyzeUrl()` function
 - Language passed from frontend to backend
 - GPT prompt updated with language instruction
