@@ -242,7 +242,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
-**Commit: [PENDING] - improve: enhance source discovery and enforce quality over quantity**
+**Commit: `9b6efef` - improve: enhance source discovery and enforce quality over quantity**
 - Social Media search now uses `site:linkedin.com/posts` filter to find actual posts, not company pages
 - Increased maxResults: Social Media (5→10), News (4→8), Growth Signals (3→6)
 - Added MANDATORY SOURCE LINKING rule: Only create ice breakers where [SOURCE: url] tag exists
