@@ -41,6 +41,131 @@ function isSwedishCompany(url: string): boolean {
   return url.includes('.se');
 }
 
+// GPT-driven search for Swedish company data (org number + financials)
+async function searchSwedishCompanyData(
+  companyName: string,
+  url: string,
+  tavilyClient: any,
+  openai: OpenAI
+): Promise<{ orgNumber: string; financialData: string }> {
+  console.log(`🤖 GPT-driven search for Swedish company: ${companyName}`);
+
+  const tools = [
+    {
+      type: 'function' as const,
+      function: {
+        name: 'search_web',
+        description: 'Search the web for specific information about Swedish companies. Use this to find org numbers, financial data from Allabolag, Ratsit, Bolagsverket, etc.',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'The search query to execute',
+            },
+          },
+          required: ['query'],
+        },
+      },
+    },
+  ];
+
+  const messages: any[] = [
+    {
+      role: 'system',
+      content: `You are a Swedish company research assistant. Your goal: Find the org number and latest financial data for this company.
+
+TASK 1: Find organisationsnummer (org number) for the company
+- Search for "${url} organisationsnummer" or "${companyName} AB org nummer"
+- Try sources: Allabolag, Bolagsverket, Ratsit, hitta.se
+- Org number format: 5XXXXX-XXXX or 5XXXXXXXXX
+
+TASK 2: Once you have org number, find financial data
+- Search for "[org number] Allabolag bokslut" or "[org number] årsredovisning"
+- Look for: omsättning, resultat, tillgångar, soliditet, etc.
+
+Be strategic with your searches. You can make multiple search_web calls.`,
+    },
+    {
+      role: 'user',
+      content: `Find org number and latest financial data (2024 or latest available) for: ${companyName} (${url})`,
+    },
+  ];
+
+  let iterations = 0;
+  const maxIterations = 6;
+  let orgNumber = '';
+  let financialData = '';
+
+  while (iterations < maxIterations) {
+    iterations++;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-5.2',
+      messages,
+      tools,
+      tool_choice: iterations < 4 ? 'auto' : 'none', // Allow tools for first 3 iterations, then force completion
+    });
+
+    const assistantMessage = response.choices[0].message;
+    messages.push(assistantMessage);
+
+    // Check if GPT wants to call a function
+    if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+      // Execute all function calls
+      for (const toolCall of assistantMessage.tool_calls) {
+        if (toolCall.function.name === 'search_web') {
+          const args = JSON.parse(toolCall.function.arguments);
+          const searchQuery = args.query;
+
+          console.log(`🔍 GPT requested search: "${searchQuery}"`);
+
+          // Execute Tavily search
+          try {
+            const searchResult = await tavilyClient.search(searchQuery, {
+              maxResults: 5,
+              searchDepth: 'advanced',
+            });
+
+            const resultText = searchResult.results
+              ?.map((r: any) => `${r.title}\n${r.content}`)
+              .join('\n\n') || 'No results found';
+
+            // Return results to GPT
+            messages.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: resultText.slice(0, 3000), // Limit length
+            });
+          } catch (error) {
+            messages.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: 'Search failed',
+            });
+          }
+        }
+      }
+    } else {
+      // GPT is done, extract final answer
+      const finalAnswer = assistantMessage.content || '';
+
+      // Extract org number from GPT's response
+      const orgRegex = /\b(5\d{5}[-]?\d{4})\b/g;
+      const orgMatches = finalAnswer.match(orgRegex);
+      if (orgMatches) {
+        orgNumber = orgMatches[0];
+      }
+
+      financialData = finalAnswer;
+      break;
+    }
+  }
+
+  console.log(`✅ GPT search complete. Org number: ${orgNumber || 'not found'}`);
+  return { orgNumber, financialData };
+}
+
 export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
   // Validate API keys
   if (!process.env.OPENAI_API_KEY) {
@@ -84,58 +209,35 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
       console.error('Website extraction failed:', error);
     }
 
-    // STEP 2: Extract Swedish org number (if Swedish company)
-    // PRIORITY 1: Check website content first (fastest and most reliable)
-    // PRIORITY 2: If not found, search web with multiple strategies
+    // STEP 2: GPT-driven search for Swedish companies (org number + financial data)
     let orgNumber = '';
+    let gptFinancialData = '';
     if (isSwedish) {
-      // Try to find org number directly in website content (footer, about page, etc.)
+      console.log(`🇸🇪 Swedish company detected, using GPT-driven search...`);
+
+      // First check website content for org number (quick check)
       const orgRegex = /\b(5\d{5}[-]?\d{4})\b/g;
       const websiteMatches = websiteContent.match(orgRegex);
 
       if (websiteMatches && websiteMatches.length > 0) {
         orgNumber = websiteMatches[0];
         console.log(`✅ Found org number on website: ${orgNumber}`);
-      } else {
-        // Fallback: Search web if not found on website
-        console.log(`🔍 Org number not on website, searching web...`);
-        try {
-          const [urlSearch, nameSearch, bolagsverketSearch, allabolagSearch, hittaSearch, ratsitSearch] = await Promise.allSettled([
-            tavilyClient.search(`${url} organisationsnummer`, { maxResults: 3, searchDepth: 'advanced' }),
-            tavilyClient.search(`"${companyName} AB" 556 559`, { maxResults: 3, searchDepth: 'advanced' }),
-            tavilyClient.search(`${url} bolagsverket`, { maxResults: 3, searchDepth: 'advanced' }),
-            tavilyClient.search(`allabolag.se ${companyName}`, { maxResults: 3, searchDepth: 'advanced' }),
-            tavilyClient.search(`hitta.se ${companyName} organisationsnummer`, { maxResults: 3, searchDepth: 'advanced' }),
-            tavilyClient.search(`${companyName} ${url.replace('https://', '').replace('www.', '').split('/')[0]} orgnr`, { maxResults: 2, searchDepth: 'advanced' }),
-          ]);
+      }
 
-          // Combine all search results
-          const allResults = [
-            ...(urlSearch.status === 'fulfilled' && urlSearch.value.results ? urlSearch.value.results : []),
-            ...(nameSearch.status === 'fulfilled' && nameSearch.value.results ? nameSearch.value.results : []),
-            ...(bolagsverketSearch.status === 'fulfilled' && bolagsverketSearch.value.results ? bolagsverketSearch.value.results : []),
-            ...(allabolagSearch.status === 'fulfilled' && allabolagSearch.value.results ? allabolagSearch.value.results : []),
-            ...(hittaSearch.status === 'fulfilled' && hittaSearch.value.results ? hittaSearch.value.results : []),
-            ...(ratsitSearch.status === 'fulfilled' && ratsitSearch.value.results ? ratsitSearch.value.results : []),
-          ];
+      // Use GPT-driven search for comprehensive data (always run, even if we found org number)
+      try {
+        const gptResult = await searchSwedishCompanyData(companyName, url, tavilyClient, openai);
 
-          const searchText = allResults.map(r => `${r.title} ${r.content}`).join(' ');
-          const matches = searchText.match(orgRegex);
-
-          if (matches && matches.length > 0) {
-            // Take the most common org number
-            const orgCounts = matches.reduce((acc: any, num: string) => {
-              acc[num] = (acc[num] || 0) + 1;
-              return acc;
-            }, {});
-            orgNumber = Object.entries(orgCounts).sort((a: any, b: any) => b[1] - a[1])[0][0] as string;
-            console.log(`✅ Found org number via web search: ${orgNumber}`);
-          } else {
-            console.log(`⚠️ No org number found for ${companyName}`);
-          }
-        } catch (error) {
-          console.error('Org number web search failed:', error);
+        // If GPT found an org number and we didn't have one, use it
+        if (gptResult.orgNumber && !orgNumber) {
+          orgNumber = gptResult.orgNumber;
+          console.log(`✅ GPT found org number: ${orgNumber}`);
         }
+
+        // Store GPT's financial findings
+        gptFinancialData = gptResult.financialData;
+      } catch (error) {
+        console.error('GPT-driven search failed:', error);
       }
     }
 
@@ -224,7 +326,8 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
       leadership: leadershipData.status === 'fulfilled' ? leadershipData.value : 'No data',
       socialMedia: socialData.status === 'fulfilled' ? socialData.value : 'No data',
       news: newsData.status === 'fulfilled' ? newsData.value : 'No data',
-      financials: financialData.status === 'fulfilled' ? financialData.value : 'No data',
+      financials: (financialData.status === 'fulfilled' ? financialData.value : 'No data') +
+        (gptFinancialData ? `\n\n=== GPT-VERIFIED SWEDISH DATA ===\n${gptFinancialData}` : ''),
       signals: signalsData.status === 'fulfilled' ? signalsData.value : 'No data',
     };
 
