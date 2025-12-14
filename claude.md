@@ -242,7 +242,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
-**Commit: [PENDING] - fix: inject source URLs into research data for better ice breaker linking**
+**Commit: `bd26637` - fix: inject source URLs into research data for better ice breaker linking**
 - Updated all Tavily search result mappings to include `[SOURCE: url]` tags
 - Modified 6 research streams: Leadership, Social Media, News, Financials (5 locations), Growth Signals
 - Each search result now formatted as `[SOURCE: https://...] Title: Content`
