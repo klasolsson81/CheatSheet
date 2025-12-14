@@ -242,10 +242,15 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
-**Commit: `9b6efef` - improve: enhance source discovery and enforce quality over quantity**
-- Social Media search now uses `site:linkedin.com/posts` filter to find actual posts, not company pages
-- Increased maxResults: Social Media (5→10), News (4→8), Growth Signals (3→6)
-- Added MANDATORY SOURCE LINKING rule: Only create ice breakers where [SOURCE: url] tag exists
+**Commit: [PENDING] - fix: revert site filter and keep increased search limits**
+- REVERTED `site:linkedin.com/posts` filter (caused irrelevant results from unrelated companies)
+- KEPT increased maxResults: Social Media (5→10), News (4→8), Growth Signals (3→6)
+- KEPT MANDATORY SOURCE LINKING rule improvements
+
+**Commit: `9b6efef` - improve: enhance source discovery and enforce quality over quantity** (PARTIALLY REVERTED)
+- ~~Social Media search now uses `site:linkedin.com/posts` filter~~ (REVERTED - caused false matches)
+- Increased maxResults: Social Media (5→10), News (4→8), Growth Signals (3→6) (KEPT)
+- Added MANDATORY SOURCE LINKING rule: Only create ice breakers where [SOURCE: url] tag exists (KEPT)
 - GPT now generates 1-2 quality ice breakers with sources instead of 3 with fake/missing sources
 - Better quality control: "If you only find 1-2 entries with sources, only generate 1-2 ice breakers"
 

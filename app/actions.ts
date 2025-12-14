@@ -301,11 +301,11 @@ export async function analyzeUrl(
         return res.results.map(r => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
       }),
 
-      // 3. Social Media & Personal Activity (ENHANCED for targeted search with site filter)
+      // 3. Social Media & Personal Activity (ENHANCED for targeted search)
       tavilyClient.search(
         hasAdvanced && advancedParams.contactPerson
-          ? `site:linkedin.com/posts ${advancedParams.contactPerson} ${advancedParams.specificFocus || ''} ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`
-          : `site:linkedin.com/posts ${companyName} ${targetContext} ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`,
+          ? `${advancedParams.contactPerson} LinkedIn post ${advancedParams.specificFocus || ''} ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`
+          : `${companyName} ${targetContext} LinkedIn post recent ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`,
         {
           maxResults: 10,
           searchDepth: 'advanced',
