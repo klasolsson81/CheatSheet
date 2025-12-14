@@ -323,7 +323,7 @@ export default function Home() {
               className="max-w-2xl mx-auto mb-8 p-6 bg-black/60 backdrop-blur-sm border border-red-500 rounded-lg flex items-center gap-4"
             >
               <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
-              <p className="text-white font-mono text-sm">{error}</p>
+              <p className="text-slate-200 font-sans text-base">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -347,7 +347,7 @@ export default function Home() {
                       Perfect Ice Breaker
                     </h2>
                   </div>
-                  <p className="text-lg text-white leading-relaxed">{result.ice_breaker}</p>
+                  <p className="text-lg text-slate-200 leading-relaxed font-sans">{result.ice_breaker}</p>
                 </div>
               </motion.div>
 
@@ -358,7 +358,7 @@ export default function Home() {
                     <Target className="w-6 h-6 text-emerald-500" strokeWidth={2} />
                     <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Company Overview</h3>
                   </div>
-                  <p className="text-slate-300 leading-relaxed">{result.summary}</p>
+                  <p className="text-base text-slate-200 leading-relaxed font-sans">{result.summary}</p>
                 </div>
               </motion.div>
 
@@ -374,7 +374,7 @@ export default function Home() {
                       {result.sales_hooks.map((hook, idx) => (
                         <li key={idx} className="flex items-start gap-3">
                           <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0" />
-                          <span className="text-slate-300">{hook}</span>
+                          <span className="text-base text-slate-200 leading-relaxed font-sans">{hook}</span>
                         </li>
                       ))}
                     </ul>
@@ -392,7 +392,7 @@ export default function Home() {
                       {result.pain_points.map((point, idx) => (
                         <li key={idx} className="flex items-start gap-3">
                           <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0" />
-                          <span className="text-slate-300">{point}</span>
+                          <span className="text-base text-slate-200 leading-relaxed font-sans">{point}</span>
                         </li>
                       ))}
                     </ul>
@@ -408,7 +408,7 @@ export default function Home() {
                       <DollarSign className="w-6 h-6 text-emerald-500" strokeWidth={2} />
                       <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Financial Signals</h3>
                     </div>
-                    <p className="text-slate-300 leading-relaxed">{result.financial_signals}</p>
+                    <p className="text-base text-slate-200 leading-relaxed font-sans">{result.financial_signals}</p>
                   </div>
                 </motion.div>
 
@@ -419,7 +419,7 @@ export default function Home() {
                       <Activity className="w-6 h-6 text-emerald-500" strokeWidth={2} />
                       <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Company Tone</h3>
                     </div>
-                    <p className="text-slate-300 leading-relaxed">{result.company_tone}</p>
+                    <p className="text-base text-slate-200 leading-relaxed font-sans">{result.company_tone}</p>
                   </div>
                 </motion.div>
               </div>
