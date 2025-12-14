@@ -119,29 +119,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-hidden relative">
-      {/* Enhanced Grid Background Pattern */}
+      {/* Clean Grid Background Pattern */}
       <div className="fixed inset-0 bg-slate-950" />
       <div
-        className="fixed inset-0 opacity-[0.15]"
+        className="fixed inset-0 opacity-[0.08]"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(59, 130, 246, 0.05) 1.5px, transparent 1.5px),
-            linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1.5px, transparent 1.5px)
+            linear-gradient(rgba(100, 116, 139, 0.4) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(100, 116, 139, 0.4) 1px, transparent 1px)
           `,
-          backgroundSize: '60px 60px',
-          maskImage: 'radial-gradient(ellipse 80% 60% at 50% 40%, black 40%, transparent 100%)',
+          backgroundSize: '40px 40px',
         }}
       />
-
-      {/* Ambient Glow - Top Center */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] opacity-20 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-radial from-indigo-500 via-purple-500 to-transparent blur-3xl" />
-      </div>
-
-      {/* Ambient Glow - Bottom Right */}
-      <div className="fixed bottom-0 right-0 w-[600px] h-[500px] opacity-10 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-radial from-cyan-500 via-blue-500 to-transparent blur-3xl" />
-      </div>
 
       <div className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
         {/* Header */}
@@ -181,29 +170,24 @@ export default function Home() {
           className="mb-16"
         >
           <div className="relative max-w-4xl mx-auto">
-            <div className="group">
-              {/* Glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-blue-500/30 to-purple-500/30 rounded-3xl blur-2xl group-focus-within:blur-3xl transition-all duration-300" />
-
-              {/* Glass Input Container */}
-              <div className="relative flex items-center bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 shadow-2xl overflow-hidden h-16 group-focus-within:border-cyan-500/50 group-focus-within:shadow-[0_0_30px_rgba(34,211,238,0.3)] transition-all duration-300">
-                <Search className="ml-6 w-7 h-7 text-cyan-400 group-focus-within:text-cyan-300 transition-colors" />
-                <input
-                  type="text"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Enter company URL (e.g., stripe.com or https://stripe.com)"
-                  className="flex-1 bg-transparent px-5 py-5 text-lg text-white placeholder-slate-500 outline-none"
-                  disabled={loading}
-                />
-                <button
-                  type="submit"
-                  disabled={loading || !url.trim()}
-                  className="m-2 px-10 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed rounded-2xl font-semibold transition-all duration-200 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] active:scale-95"
-                >
-                  {loading ? 'Analyzing...' : 'Analyze'}
-                </button>
-              </div>
+            {/* Sharp Tech Input Container */}
+            <div className="flex items-center bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-slate-700 overflow-hidden h-16 focus-within:border-cyan-400 focus-within:shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-all duration-300">
+              <Search className="ml-6 w-7 h-7 text-slate-400 transition-colors" />
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="Enter company URL (e.g., stripe.com or https://stripe.com)"
+                className="flex-1 bg-transparent px-5 py-5 text-lg text-white placeholder-slate-500 outline-none"
+                disabled={loading}
+              />
+              <button
+                type="submit"
+                disabled={loading || !url.trim()}
+                className="m-2 px-10 py-4 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-xl font-semibold transition-all duration-200"
+              >
+                {loading ? 'Analyzing...' : 'Analyze'}
+              </button>
             </div>
 
             {/* Advanced Search Toggle */}
@@ -228,7 +212,7 @@ export default function Home() {
                   transition={{ duration: 0.3 }}
                   className="relative z-10 mt-6 overflow-hidden"
                 >
-                  <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
+                  <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 space-y-4">
                     <p className="text-sm text-slate-400 mb-4">
                       Optional: Add details to target specific parts of large organizations (e.g., Volvo Gothenburg, VP of Engineering)
                     </p>
@@ -244,7 +228,7 @@ export default function Home() {
                           value={contactPerson}
                           onChange={(e) => setContactPerson(e.target.value)}
                           placeholder="e.g., John Smith or LinkedIn URL"
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                          className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
                           disabled={loading}
                         />
                       </div>
@@ -259,7 +243,7 @@ export default function Home() {
                           value={jobTitle}
                           onChange={(e) => setJobTitle(e.target.value)}
                           placeholder="e.g., VP of Engineering, Head of Sales"
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                          className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
                           disabled={loading}
                         />
                       </div>
@@ -274,7 +258,7 @@ export default function Home() {
                           value={department}
                           onChange={(e) => setDepartment(e.target.value)}
                           placeholder="e.g., Marketing, R&D, Sales"
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                          className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
                           disabled={loading}
                         />
                       </div>
@@ -289,7 +273,7 @@ export default function Home() {
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
                           placeholder="e.g., Gothenburg, Stockholm, Germany"
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                          className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
                           disabled={loading}
                         />
                       </div>
@@ -304,7 +288,7 @@ export default function Home() {
                           value={specificFocus}
                           onChange={(e) => setSpecificFocus(e.target.value)}
                           placeholder="e.g., sustainability, digitalization, AI transformation"
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                          className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-400 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
                           disabled={loading}
                         />
                       </div>
@@ -339,14 +323,14 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* Error State - Glassmorphism */}
+        {/* Error State - Sharp Tech */}
         <AnimatePresence>
           {error && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="max-w-2xl mx-auto mb-8 p-6 bg-red-500/10 backdrop-blur-md border border-red-500/30 rounded-2xl flex items-center gap-4"
+              className="max-w-2xl mx-auto mb-8 p-6 bg-slate-900/80 backdrop-blur-sm border border-red-500/40 rounded-2xl flex items-center gap-4 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
             >
               <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0" />
               <p className="text-red-200">{error}</p>
@@ -364,49 +348,48 @@ export default function Home() {
               exit="hidden"
               className="space-y-6"
             >
-              {/* Ice Breaker - Featured Glass Card */}
-              <motion.div variants={cardVariants} className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-                <div className="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 shadow-2xl hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(34,211,238,0.2)] transition-all duration-300 hover:-translate-y-1">
+              {/* Ice Breaker - Blue Sharp Tech Card */}
+              <motion.div variants={cardVariants}>
+                <div className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/40 rounded-2xl p-8 shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all duration-300">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="p-3 bg-cyan-500/10 rounded-xl backdrop-blur-sm shadow-[0_0_20px_rgba(34,211,238,0.3)]">
-                      <MessageSquare className="w-8 h-8 text-cyan-400" />
+                    <div className="p-3 bg-blue-500/10 rounded-xl">
+                      <MessageSquare className="w-8 h-8 text-blue-400" />
                     </div>
-                    <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    <h2 className="text-3xl font-bold text-blue-400">
                       Perfect Ice Breaker
                     </h2>
                   </div>
-                  <p className="text-xl text-white leading-relaxed font-light">{result.ice_breaker}</p>
+                  <p className="text-xl text-white leading-relaxed">{result.ice_breaker}</p>
                 </div>
               </motion.div>
 
-              {/* Summary - Glass Card */}
-              <motion.div variants={cardVariants} className="relative group">
-                <div className="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-blue-500/30 hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] transition-all duration-300 hover:-translate-y-0.5">
+              {/* Company Overview - Blue Sharp Tech Card */}
+              <motion.div variants={cardVariants}>
+                <div className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/40 rounded-2xl p-6 shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all duration-300">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-blue-500/10 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                    <div className="p-2 bg-blue-500/10 rounded-lg">
                       <Target className="w-7 h-7 text-blue-400" />
                     </div>
-                    <h3 className="text-xl font-bold text-blue-300">Company Overview</h3>
+                    <h3 className="text-xl font-bold text-blue-400">Company Overview</h3>
                   </div>
                   <p className="text-slate-300 leading-relaxed">{result.summary}</p>
                 </div>
               </motion.div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Sales Hooks - Glass Card */}
-                <motion.div variants={cardVariants} className="relative group">
-                  <div className="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-green-500/30 hover:shadow-[0_0_25px_rgba(34,197,94,0.15)] transition-all duration-300 hover:-translate-y-0.5">
+                {/* Sales Hooks - Green Sharp Tech Card */}
+                <motion.div variants={cardVariants}>
+                  <div className="bg-slate-900/80 backdrop-blur-sm border border-green-500/40 rounded-2xl p-6 shadow-[0_0_15px_rgba(34,197,94,0.15)] transition-all duration-300">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-green-500/10 rounded-lg shadow-[0_0_15px_rgba(34,197,94,0.2)]">
+                      <div className="p-2 bg-green-500/10 rounded-lg">
                         <TrendingUp className="w-7 h-7 text-green-400" />
                       </div>
-                      <h3 className="text-xl font-bold text-green-300">Sales Hooks</h3>
+                      <h3 className="text-xl font-bold text-green-400">Sales Hooks</h3>
                     </div>
                     <ul className="space-y-3">
                       {result.sales_hooks.map((hook, idx) => (
                         <li key={idx} className="flex items-start gap-3">
-                          <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                          <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0" />
                           <span className="text-slate-300">{hook}</span>
                         </li>
                       ))}
@@ -414,19 +397,19 @@ export default function Home() {
                   </div>
                 </motion.div>
 
-                {/* Pain Points - Glass Card */}
-                <motion.div variants={cardVariants} className="relative group">
-                  <div className="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-orange-500/30 hover:shadow-[0_0_25px_rgba(249,115,22,0.15)] transition-all duration-300 hover:-translate-y-0.5">
+                {/* Pain Points - Red Sharp Tech Card */}
+                <motion.div variants={cardVariants}>
+                  <div className="bg-slate-900/80 backdrop-blur-sm border border-red-500/40 rounded-2xl p-6 shadow-[0_0_15px_rgba(239,68,68,0.15)] transition-all duration-300">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-orange-500/10 rounded-lg shadow-[0_0_15px_rgba(249,115,22,0.2)]">
-                        <AlertCircle className="w-7 h-7 text-orange-400" />
+                      <div className="p-2 bg-red-500/10 rounded-lg">
+                        <AlertCircle className="w-7 h-7 text-red-400" />
                       </div>
-                      <h3 className="text-xl font-bold text-orange-300">Pain Points</h3>
+                      <h3 className="text-xl font-bold text-red-400">Pain Points</h3>
                     </div>
                     <ul className="space-y-3">
                       {result.pain_points.map((point, idx) => (
                         <li key={idx} className="flex items-start gap-3">
-                          <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0 shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
+                          <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0" />
                           <span className="text-slate-300">{point}</span>
                         </li>
                       ))}
@@ -436,27 +419,27 @@ export default function Home() {
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Financial Signals - Glass Card */}
-                <motion.div variants={cardVariants} className="relative group">
-                  <div className="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-emerald-500/30 hover:shadow-[0_0_25px_rgba(16,185,129,0.15)] transition-all duration-300 hover:-translate-y-0.5">
+                {/* Financial Signals - Purple Sharp Tech Card */}
+                <motion.div variants={cardVariants}>
+                  <div className="bg-slate-900/80 backdrop-blur-sm border border-purple-500/40 rounded-2xl p-6 shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all duration-300">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-emerald-500/10 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                        <DollarSign className="w-7 h-7 text-emerald-400" />
+                      <div className="p-2 bg-purple-500/10 rounded-lg">
+                        <DollarSign className="w-7 h-7 text-purple-400" />
                       </div>
-                      <h3 className="text-xl font-bold text-emerald-300">Financial Signals</h3>
+                      <h3 className="text-xl font-bold text-purple-400">Financial Signals</h3>
                     </div>
                     <p className="text-slate-300 leading-relaxed">{result.financial_signals}</p>
                   </div>
                 </motion.div>
 
-                {/* Company Tone - Glass Card */}
-                <motion.div variants={cardVariants} className="relative group">
-                  <div className="relative bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 hover:border-purple-500/30 hover:shadow-[0_0_25px_rgba(168,85,247,0.15)] transition-all duration-300 hover:-translate-y-0.5">
+                {/* Company Tone - Purple Sharp Tech Card */}
+                <motion.div variants={cardVariants}>
+                  <div className="bg-slate-900/80 backdrop-blur-sm border border-purple-500/40 rounded-2xl p-6 shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all duration-300">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-purple-500/10 rounded-lg shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                      <div className="p-2 bg-purple-500/10 rounded-lg">
                         <Sparkles className="w-7 h-7 text-purple-400" />
                       </div>
-                      <h3 className="text-xl font-bold text-purple-300">Company Tone</h3>
+                      <h3 className="text-xl font-bold text-purple-400">Company Tone</h3>
                     </div>
                     <p className="text-slate-300 leading-relaxed">{result.company_tone}</p>
                   </div>
