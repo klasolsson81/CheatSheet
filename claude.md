@@ -81,6 +81,9 @@ Generated insights include:
    - Company news/announcements
    - Growth signals (hiring, funding, expansion)
    - Max 15-20 words each, conversational tone
+   - **Clickable with source links:** Each ice breaker includes the original source URL when available
+   - Opens in new tab when clicked (LinkedIn posts, news articles, etc.)
+   - External link icon indicates clickability
 
 2. **Company Overview** - 1-2 sentence summary of what they do
 
@@ -238,6 +241,15 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 ## Recent Changes
 
 ### 2025-12-14 (Current Session)
+
+**Commit: `[pending]` - feat: make ice breakers clickable with source URLs**
+- Changed ice_breaker from string[] to IceBreaker[] with { text, source_url }
+- Updated GPT prompt to return source URLs for each ice breaker
+- Ice breakers now clickable when source URL available
+- Opens source (LinkedIn post, article, news) in new tab
+- Added ExternalLink icon to indicate clickability
+- Non-clickable ice breakers (no URL) shown without cursor-pointer
+- Backend validates and includes URLs from research data
 
 **Commit: `4b60571` - feat: add Atkinson Hyperlegible font and SVG flag icons**
 - Replaced Inter with Atkinson Hyperlegible for improved readability

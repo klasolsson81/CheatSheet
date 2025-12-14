@@ -13,6 +13,7 @@ import {
   Radar,
   Activity,
   AlertTriangle,
+  ExternalLink,
 } from 'lucide-react';
 import { analyzeUrl } from './actions';
 import { type Language, getTranslation } from './translations';
@@ -44,9 +45,14 @@ const BritishFlag = () => (
   </svg>
 );
 
+interface IceBreaker {
+  text: string;
+  source_url?: string;
+}
+
 interface AnalysisResult {
   summary: string;
-  ice_breaker: string[];
+  ice_breaker: IceBreaker[];
   pain_points: string[];
   sales_hooks: string[];
   financial_signals: string;
@@ -422,17 +428,37 @@ export default function Home() {
                     </h2>
                   </div>
                   <div className="space-y-4">
-                    {result.ice_breaker.map((breaker, idx) => (
-                      <div
-                        key={idx}
-                        className="p-4 bg-blue-950/20 rounded-lg border border-blue-800/30 hover:bg-blue-900/30 hover:border-blue-600/50 transition-all duration-200 cursor-pointer"
-                      >
+                    {result.ice_breaker.map((breaker, idx) => {
+                      const hasSource = breaker.source_url && breaker.source_url.trim() !== '';
+                      const content = (
                         <div className="flex items-start gap-3">
                           <span className="text-blue-400 font-mono font-bold text-sm mt-0.5">#{idx + 1}</span>
-                          <p className="text-base text-slate-200 leading-relaxed font-sans flex-1">{breaker}</p>
+                          <p className="text-base text-slate-200 leading-relaxed font-sans flex-1">{breaker.text}</p>
+                          {hasSource && (
+                            <ExternalLink className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+
+                      return hasSource ? (
+                        <a
+                          key={idx}
+                          href={breaker.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block p-4 bg-blue-950/20 rounded-lg border border-blue-800/30 hover:bg-blue-900/30 hover:border-blue-600/50 transition-all duration-200 cursor-pointer"
+                        >
+                          {content}
+                        </a>
+                      ) : (
+                        <div
+                          key={idx}
+                          className="p-4 bg-blue-950/20 rounded-lg border border-blue-800/30"
+                        >
+                          {content}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </motion.div>

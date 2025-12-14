@@ -3,9 +3,14 @@
 import OpenAI from 'openai';
 import { tavily } from '@tavily/core';
 
+interface IceBreaker {
+  text: string;
+  source_url?: string;
+}
+
 interface AnalysisResult {
   summary: string;
-  ice_breaker: string[];
+  ice_breaker: IceBreaker[];
   pain_points: string[];
   sales_hooks: string[];
   financial_signals: string;
@@ -424,7 +429,10 @@ BAD EXAMPLES (DO NOT USE):
 
 Analysis Framework:
 1. **Summary** (1-2 sentences max): What they DO and their value prop
-2. **Ice Breakers** (Array of 2-3 strings): Ultra-specific, recent, personal hooks from different angles (social posts, company news, growth signals)
+2. **Ice Breakers** (Array of 2-3 objects with text + source_url): Ultra-specific, recent, personal hooks from different angles (social posts, company news, growth signals)
+   - IMPORTANT: Each ice breaker MUST include the source URL (LinkedIn post, article, news) if available in the research data
+   - Format: { "text": "The ice breaker text", "source_url": "https://linkedin.com/..." }
+   - If no specific URL found, use source_url: null or omit it
 3. **Pain Points** (3 bullet points, 5-10 words each): Specific operational/strategic challenges
 4. **Sales Hooks** (2 bullet points, 8-12 words each): Direct value propositions tied to pain points
 5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures.
@@ -439,7 +447,11 @@ Analysis Framework:
 Output ONLY valid JSON:
 {
   "summary": "Brief, punchy summary",
-  "ice_breaker": ["Opener 1 (e.g., from social post)", "Opener 2 (e.g., from company news)", "Opener 3 (e.g., from growth signals)"],
+  "ice_breaker": [
+    { "text": "Opener 1 (from social post)", "source_url": "https://linkedin.com/posts/..." },
+    { "text": "Opener 2 (from company news)", "source_url": "https://newssite.com/article" },
+    { "text": "Opener 3 (from growth signals)", "source_url": null }
+  ],
   "pain_points": ["Challenge 1", "Challenge 2", "Challenge 3"],
   "sales_hooks": ["Hook 1", "Hook 2"],
   "financial_signals": "Brief growth/financial status",
