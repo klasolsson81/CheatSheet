@@ -242,7 +242,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
-**Commit: [PENDING] - improve: add explicit URL extraction instructions and debug logging**
+**Commit: `583614d` - improve: add explicit URL extraction instructions and debug logging**
 - Enhanced GPT prompt with CRITICAL SOURCE URL EXTRACTION section
 - Added concrete example: If research shows "[SOURCE: url] fact", extract that exact URL
 - Explicitly instructs GPT NOT to use company homepage as source_url
