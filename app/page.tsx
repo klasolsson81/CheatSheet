@@ -42,6 +42,14 @@ export default function Home() {
   const [error, setError] = useState('');
   const [loadingMessage, setLoadingMessage] = useState('');
 
+  // Advanced Search State
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [contactPerson, setContactPerson] = useState('');
+  const [department, setDepartment] = useState('');
+  const [location, setLocation] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
+  const [specificFocus, setSpecificFocus] = useState('');
+
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
@@ -58,7 +66,15 @@ export default function Home() {
     }, 2000);
 
     try {
-      const analysis = await analyzeUrl(url);
+      // Build advanced search parameters (only include non-empty fields)
+      const advancedParams: any = {};
+      if (contactPerson.trim()) advancedParams.contactPerson = contactPerson.trim();
+      if (department.trim()) advancedParams.department = department.trim();
+      if (location.trim()) advancedParams.location = location.trim();
+      if (jobTitle.trim()) advancedParams.jobTitle = jobTitle.trim();
+      if (specificFocus.trim()) advancedParams.specificFocus = specificFocus.trim();
+
+      const analysis = await analyzeUrl(url, advancedParams);
 
       // Check for NSFW content flag
       if (analysis.error === 'NSFW_CONTENT') {
@@ -187,6 +203,114 @@ export default function Home() {
                 {loading ? 'Analyzing...' : 'Analyze'}
               </button>
             </div>
+
+            {/* Advanced Search Toggle */}
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors"
+              >
+                <span>{showAdvanced ? '−' : '+'}</span>
+                <span>Advanced Search (Target specific person/department)</span>
+              </button>
+            </div>
+
+            {/* Advanced Search Fields */}
+            <AnimatePresence>
+              {showAdvanced && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mt-6 overflow-hidden"
+                >
+                  <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
+                    <p className="text-sm text-slate-400 mb-4">
+                      Optional: Add details to target specific parts of large organizations (e.g., Volvo Gothenburg, VP of Engineering)
+                    </p>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Contact Person */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                          Contact Person
+                        </label>
+                        <input
+                          type="text"
+                          value={contactPerson}
+                          onChange={(e) => setContactPerson(e.target.value)}
+                          placeholder="e.g., John Smith or LinkedIn URL"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                          disabled={loading}
+                        />
+                      </div>
+
+                      {/* Job Title */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                          Job Title
+                        </label>
+                        <input
+                          type="text"
+                          value={jobTitle}
+                          onChange={(e) => setJobTitle(e.target.value)}
+                          placeholder="e.g., VP of Engineering, Head of Sales"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                          disabled={loading}
+                        />
+                      </div>
+
+                      {/* Department */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                          Department/Division
+                        </label>
+                        <input
+                          type="text"
+                          value={department}
+                          onChange={(e) => setDepartment(e.target.value)}
+                          placeholder="e.g., Marketing, R&D, Sales"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                          disabled={loading}
+                        />
+                      </div>
+
+                      {/* Location */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                          Location/Office
+                        </label>
+                        <input
+                          type="text"
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                          placeholder="e.g., Gothenburg, Stockholm, Germany"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                          disabled={loading}
+                        />
+                      </div>
+
+                      {/* Specific Focus */}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                          Specific Focus/Interest
+                        </label>
+                        <input
+                          type="text"
+                          value={specificFocus}
+                          onChange={(e) => setSpecificFocus(e.target.value)}
+                          placeholder="e.g., sustainability, digitalization, AI transformation"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                          disabled={loading}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.form>
 

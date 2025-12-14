@@ -174,7 +174,18 @@ Remember: Don't finish until you've searched for financials with the org number!
   return { orgNumber, financialData };
 }
 
-export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
+interface AdvancedSearchParams {
+  contactPerson?: string;
+  department?: string;
+  location?: string;
+  jobTitle?: string;
+  specificFocus?: string;
+}
+
+export async function analyzeUrl(
+  inputUrl: string,
+  advancedParams?: AdvancedSearchParams
+): Promise<AnalysisResult> {
   // Validate API keys
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY is not configured. Please add it to your environment variables.');
@@ -256,25 +267,44 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
       }
     }
 
+    // Build targeted search queries based on advanced parameters
+    const hasAdvanced = advancedParams && Object.keys(advancedParams).length > 0;
+    const targetContext = hasAdvanced ? [
+      advancedParams.contactPerson,
+      advancedParams.jobTitle,
+      advancedParams.department,
+      advancedParams.location,
+    ].filter(Boolean).join(' ') : '';
+
     // STEP 3: MULTI-SOURCE PARALLEL RESEARCH ENGINE
     const [websiteData, leadershipData, socialData, newsData, financialData, signalsData] = await Promise.allSettled([
       // 1. Website Content (already extracted above, just return it)
       Promise.resolve(websiteContent.length > 0 ? websiteContent : 'No content extracted'),
 
-      // 2. Leadership & Key People Research
-      tavilyClient.search(`${companyName} CEO founder leadership team LinkedIn 2025`, {
-        maxResults: 4,
-        searchDepth: 'advanced',
-      }).then(res => {
+      // 2. Leadership & Key People Research (ENHANCED with advanced params)
+      tavilyClient.search(
+        hasAdvanced && advancedParams.contactPerson
+          ? `${advancedParams.contactPerson} ${companyName} LinkedIn ${advancedParams.location || ''} ${advancedParams.jobTitle || ''} 2025`
+          : `${companyName} ${targetContext} CEO founder leadership team LinkedIn 2025`,
+        {
+          maxResults: 4,
+          searchDepth: 'advanced',
+        }
+      ).then(res => {
         if (!res.results || res.results.length === 0) return 'No leadership data found';
         return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
       }),
 
-      // 3. Social Media & Personal Activity (ENHANCED for recent, personal posts)
-      tavilyClient.search(`${companyName} LinkedIn post recent ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`, {
-        maxResults: 5,
-        searchDepth: 'advanced',
-      }).then(res => {
+      // 3. Social Media & Personal Activity (ENHANCED for targeted search)
+      tavilyClient.search(
+        hasAdvanced && advancedParams.contactPerson
+          ? `${advancedParams.contactPerson} LinkedIn post ${advancedParams.specificFocus || ''} ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`
+          : `${companyName} ${targetContext} LinkedIn post recent ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`,
+        {
+          maxResults: 5,
+          searchDepth: 'advanced',
+        }
+      ).then(res => {
         if (!res.results || res.results.length === 0) return 'No social activity found';
         return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
       }),
@@ -408,7 +438,19 @@ Output ONLY valid JSON:
 
 Use the multi-source research below. Prioritize RECENT, SPECIFIC insights over generic observations.`;
 
-    const userPrompt = `Company: ${companyName} (${url})${isSwedish ? ' [🇸🇪 Swedish Company - GPT-verified Allabolag data included below]' : ''}
+    // Build advanced search context for prompt
+    const advancedContext = hasAdvanced
+      ? `\n\n🎯 TARGETED SEARCH - Focus your analysis on:
+${advancedParams.contactPerson ? `- Contact Person: ${advancedParams.contactPerson}` : ''}
+${advancedParams.jobTitle ? `- Job Title: ${advancedParams.jobTitle}` : ''}
+${advancedParams.department ? `- Department: ${advancedParams.department}` : ''}
+${advancedParams.location ? `- Location: ${advancedParams.location}` : ''}
+${advancedParams.specificFocus ? `- Focus Area: ${advancedParams.specificFocus}` : ''}
+
+IMPORTANT: Tailor the ice breaker, pain points, and sales hooks specifically for this person/department/location within the larger organization.`
+      : '';
+
+    const userPrompt = `Company: ${companyName} (${url})${isSwedish ? ' [🇸🇪 Swedish Company - GPT-verified Allabolag data included below]' : ''}${advancedContext}
 
 === WEBSITE (PRIMARY SOURCE - TRUST THIS) ===
 ${research.websiteContent.slice(0, 3000)}
