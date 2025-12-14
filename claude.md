@@ -53,6 +53,13 @@ RECON is an AI-powered B2B sales intelligence tool that analyzes companies in re
   - Error messages
   - Results section titles
   - Footer status
+- **AI-generated content in selected language:**
+  - Ice breakers
+  - Pain points
+  - Sales hooks
+  - Financial signals
+  - Company tone
+  - Summary
 - Language preference saved in localStorage
 - Instant switching without page reload
 - Default: English (EN)
@@ -224,6 +231,13 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 ## Recent Changes
 
 ### 2025-12-14 (Current Session)
+
+**Commit: `[pending]` - feat: AI generates content in selected language**
+- Added language parameter to `analyzeUrl()` function
+- Language passed from frontend to backend
+- GPT prompt updated with language instruction
+- AI now generates all content (ice breakers, pain points, sales hooks, etc.) in Swedish or English based on user selection
+- Language instruction injected into system prompt
 
 **Commit: `8de278a` - fix: remove emoji flags and clean up language switcher**
 - Removed emoji flags that weren't rendering properly

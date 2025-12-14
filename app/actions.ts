@@ -184,7 +184,8 @@ interface AdvancedSearchParams {
 
 export async function analyzeUrl(
   inputUrl: string,
-  advancedParams?: AdvancedSearchParams
+  advancedParams?: AdvancedSearchParams,
+  language: 'sv' | 'en' = 'en'
 ): Promise<AnalysisResult> {
   // Validate API keys
   if (!process.env.OPENAI_API_KEY) {
@@ -379,8 +380,15 @@ export async function analyzeUrl(
 
     console.log('✅ Research complete, sending to AI...');
 
+    // Language configuration
+    const languageInstruction = language === 'sv'
+      ? `🌍 LANGUAGE: You MUST write ALL output in SWEDISH (Svenska). All ice breakers, pain points, sales hooks, financial signals, and company tone MUST be in Swedish.`
+      : `🌍 LANGUAGE: You MUST write ALL output in ENGLISH. All ice breakers, pain points, sales hooks, financial signals, and company tone MUST be in English.`;
+
     // ADVANCED AI ANALYSIS with GPT-5.2 + SAFETY & GROUNDING
     const systemPrompt = `SAFETY FIRST: Check the content. If it is Pornographic, Gambling, or Hate Speech -> Return JSON ONLY: { "error": "NSFW_CONTENT" }. Do not analyze.
+
+${languageInstruction}
 
 CRITICAL GROUNDING: You are analyzing the SPECIFIC URL provided.
 - Do NOT assume a similar-sounding name is a famous brand (e.g. 'klasolsson.se' is likely a personal site, NOT 'Clas Ohlson').

@@ -88,7 +88,7 @@ export default function Home() {
       if (jobTitle.trim()) advancedParams.jobTitle = jobTitle.trim();
       if (specificFocus.trim()) advancedParams.specificFocus = specificFocus.trim();
 
-      const analysis = await analyzeUrl(url, advancedParams);
+      const analysis = await analyzeUrl(url, advancedParams, language);
 
       // Check for NSFW content flag
       if (analysis.error === 'NSFW_CONTENT') {
