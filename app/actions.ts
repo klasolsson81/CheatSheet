@@ -385,6 +385,10 @@ export async function analyzeUrl(
 
     console.log('✅ Research complete, sending to AI...');
 
+    // Debug: Log first 500 chars of social media data to verify [SOURCE: ...] tags
+    console.log('🔍 DEBUG - Social Media data preview (first 500 chars):');
+    console.log(research.socialMedia.slice(0, 500));
+
     // Language configuration
     const languageInstruction = language === 'sv'
       ? `🌍 LANGUAGE: You MUST write ALL output in SWEDISH (Svenska). All ice breakers, pain points, sales hooks, financial signals, and company tone MUST be in Swedish.`
@@ -431,9 +435,13 @@ BAD EXAMPLES (DO NOT USE):
 Analysis Framework:
 1. **Summary** (1-2 sentences max): What they DO and their value prop
 2. **Ice Breakers** (Array of 2-3 objects with text + source_url): Ultra-specific, recent, personal hooks from different angles (social posts, company news, growth signals)
-   - IMPORTANT: Each ice breaker MUST include the source URL (LinkedIn post, article, news) if available in the research data
-   - Format: { "text": "The ice breaker text", "source_url": "https://linkedin.com/..." }
-   - If no specific URL found, use source_url: null or omit it
+   - CRITICAL SOURCE URL EXTRACTION:
+     * Every research entry starts with [SOURCE: url]
+     * When you mention a fact/post in an ice breaker, you MUST extract and use the EXACT URL from that entry's [SOURCE: ...] tag
+     * Example: If research shows "[SOURCE: https://linkedin.com/posts/abc123] CEO posted about AI strategy", then source_url MUST be "https://linkedin.com/posts/abc123"
+     * DO NOT use the company's main website URL (infinetcode.se) as source_url - use the specific article/post URL
+     * If you cannot find a [SOURCE: ...] tag for the specific fact you mention, set source_url: null
+   - Format: { "text": "The ice breaker text", "source_url": "https://linkedin.com/posts/..." }
 3. **Pain Points** (3 bullet points, 5-10 words each): Specific operational/strategic challenges
 4. **Sales Hooks** (2 bullet points, 8-12 words each): Direct value propositions tied to pain points
 5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures.
@@ -449,9 +457,18 @@ Output ONLY valid JSON:
 {
   "summary": "Brief, punchy summary",
   "ice_breaker": [
-    { "text": "Opener 1 (from social post)", "source_url": "https://linkedin.com/posts/..." },
-    { "text": "Opener 2 (from company news)", "source_url": "https://newssite.com/article" },
-    { "text": "Opener 3 (from growth signals)", "source_url": null }
+    {
+      "text": "Opener 1 based on specific fact/post",
+      "source_url": "EXACT URL from [SOURCE: ...] tag where you found this fact"
+    },
+    {
+      "text": "Opener 2 from different source/angle",
+      "source_url": "EXACT URL from [SOURCE: ...] tag - NOT the company homepage"
+    },
+    {
+      "text": "Opener 3 if no specific source found",
+      "source_url": null
+    }
   ],
   "pain_points": ["Challenge 1", "Challenge 2", "Challenge 3"],
   "sales_hooks": ["Hook 1", "Hook 2"],

@@ -242,6 +242,14 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
+**Commit: [PENDING] - improve: add explicit URL extraction instructions and debug logging**
+- Enhanced GPT prompt with CRITICAL SOURCE URL EXTRACTION section
+- Added concrete example: If research shows "[SOURCE: url] fact", extract that exact URL
+- Explicitly instructs GPT NOT to use company homepage as source_url
+- Updated JSON output example with detailed URL extraction instructions
+- Added debug logging to show first 500 chars of social media data
+- Helps diagnose if Tavily finds specific LinkedIn posts vs generic pages
+
 **Commit: `bd26637` - fix: inject source URLs into research data for better ice breaker linking**
 - Updated all Tavily search result mappings to include `[SOURCE: url]` tags
 - Modified 6 research streams: Leadership, Social Media, News, Financials (5 locations), Growth Signals
