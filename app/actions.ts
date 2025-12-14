@@ -114,7 +114,7 @@ Be strategic with your searches. You can make multiple search_web calls.`,
     if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
       // Execute all function calls
       for (const toolCall of assistantMessage.tool_calls) {
-        if (toolCall.function.name === 'search_web') {
+        if (toolCall.type === 'function' && toolCall.function.name === 'search_web') {
           const args = JSON.parse(toolCall.function.arguments);
           const searchQuery = args.query;
 
