@@ -152,29 +152,29 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="absolute top-8 right-8 flex items-center gap-2 bg-slate-900/80 backdrop-blur-sm rounded-lg p-2 border border-slate-700"
+            className="absolute top-8 right-8 flex items-center gap-1 bg-slate-900/80 backdrop-blur-sm rounded-lg p-1.5 border border-slate-700"
           >
             <button
               onClick={() => handleLanguageChange('sv')}
-              className={`px-3 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
+              className={`px-4 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
                 language === 'sv'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
                   : 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
               title="Svenska"
             >
-              🇸🇪 SV
+              SV
             </button>
             <button
               onClick={() => handleLanguageChange('en')}
-              className={`px-3 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
+              className={`px-4 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
                 language === 'en'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
                   : 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
               title="English"
             >
-              🇬🇧 EN
+              EN
             </button>
           </motion.div>
         )}
