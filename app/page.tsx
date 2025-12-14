@@ -12,6 +12,7 @@ import {
   Loader2,
   Radar,
   Activity,
+  AlertTriangle,
 } from 'lucide-react';
 import { analyzeUrl } from './actions';
 
@@ -119,9 +120,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white overflow-hidden relative">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-950 to-black text-white overflow-hidden relative">
       {/* Clean Grid Background Pattern */}
-      <div className="fixed inset-0 bg-slate-950" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-950 to-black" />
       <div
         className="fixed inset-0 opacity-[0.08]"
         style={{
@@ -320,15 +321,15 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="max-w-2xl mx-auto mb-8 p-6 bg-black/60 backdrop-blur-sm border border-red-500 rounded-lg flex items-center gap-4"
+              className="max-w-2xl mx-auto mb-8 p-6 bg-slate-900 rounded-xl shadow-lg border-l-4 border-red-500 flex items-center gap-4"
             >
-              <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
+              <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0" />
               <p className="text-slate-200 font-sans text-base">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Results - Staggered Glass Cards */}
+        {/* Results - Color-Coded Dashboard Modules */}
         <AnimatePresence>
           {result && (
             <motion.div
@@ -336,14 +337,14 @@ export default function Home() {
               initial="hidden"
               animate="visible"
               exit="hidden"
-              className="space-y-6"
+              className="space-y-8"
             >
               {/* Ice Breaker */}
               <motion.div variants={cardVariants}>
-                <div className="bg-black/60 backdrop-blur-sm border border-white rounded-lg p-8 transition-all duration-300">
+                <div className="bg-slate-900 bg-blue-950/30 rounded-xl shadow-lg border-l-4 border-blue-500 p-8 transition-all duration-300">
                   <div className="flex items-center gap-4 mb-4">
-                    <MessageSquare className="w-7 h-7 text-emerald-500" strokeWidth={2} />
-                    <h2 className="text-2xl font-bold text-white font-mono tracking-wider uppercase">
+                    <MessageSquare className="w-7 h-7 text-blue-400" strokeWidth={2} />
+                    <h2 className="text-2xl font-bold text-blue-400 font-mono tracking-wider uppercase">
                       Perfect Ice Breaker
                     </h2>
                   </div>
@@ -353,27 +354,27 @@ export default function Home() {
 
               {/* Company Overview */}
               <motion.div variants={cardVariants}>
-                <div className="bg-black/60 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-300">
+                <div className="bg-slate-900 rounded-xl shadow-lg p-6 transition-all duration-300">
                   <div className="flex items-center gap-3 mb-3">
-                    <Target className="w-6 h-6 text-emerald-500" strokeWidth={2} />
+                    <Target className="w-6 h-6 text-slate-400" strokeWidth={2} />
                     <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Company Overview</h3>
                   </div>
                   <p className="text-base text-slate-200 leading-relaxed font-sans">{result.summary}</p>
                 </div>
               </motion.div>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-8">
                 {/* Sales Hooks */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-black/60 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-300">
+                  <div className="bg-slate-900 bg-green-950/30 rounded-xl shadow-lg border-l-4 border-green-500 p-6 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-4">
-                      <TrendingUp className="w-6 h-6 text-emerald-500" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Sales Hooks</h3>
+                      <TrendingUp className="w-6 h-6 text-green-400" strokeWidth={2} />
+                      <h3 className="text-lg font-bold text-green-400 font-mono tracking-wider uppercase">Sales Hooks</h3>
                     </div>
                     <ul className="space-y-3">
                       {result.sales_hooks.map((hook, idx) => (
                         <li key={idx} className="flex items-start gap-3">
-                          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0" />
+                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0" />
                           <span className="text-base text-slate-200 leading-relaxed font-sans">{hook}</span>
                         </li>
                       ))}
@@ -383,15 +384,15 @@ export default function Home() {
 
                 {/* Pain Points */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-black/60 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-300">
+                  <div className="bg-slate-900 bg-red-950/30 rounded-xl shadow-lg border-l-4 border-red-500 p-6 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-4">
-                      <AlertCircle className="w-6 h-6 text-emerald-500" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Pain Points</h3>
+                      <AlertTriangle className="w-6 h-6 text-red-400" strokeWidth={2} />
+                      <h3 className="text-lg font-bold text-red-400 font-mono tracking-wider uppercase">Pain Points</h3>
                     </div>
                     <ul className="space-y-3">
                       {result.pain_points.map((point, idx) => (
                         <li key={idx} className="flex items-start gap-3">
-                          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0" />
+                          <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
                           <span className="text-base text-slate-200 leading-relaxed font-sans">{point}</span>
                         </li>
                       ))}
@@ -400,13 +401,13 @@ export default function Home() {
                 </motion.div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-8">
                 {/* Financial Signals */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-black/60 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-300">
+                  <div className="bg-slate-900 rounded-xl shadow-lg border-l-4 border-purple-500 p-6 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-3">
-                      <DollarSign className="w-6 h-6 text-emerald-500" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Financial Signals</h3>
+                      <DollarSign className="w-6 h-6 text-purple-400" strokeWidth={2} />
+                      <h3 className="text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">Financial Signals</h3>
                     </div>
                     <p className="text-base text-slate-200 leading-relaxed font-sans">{result.financial_signals}</p>
                   </div>
@@ -414,10 +415,10 @@ export default function Home() {
 
                 {/* Company Tone */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-black/60 backdrop-blur-sm border border-slate-700 rounded-lg p-6 transition-all duration-300">
+                  <div className="bg-slate-900 rounded-xl shadow-lg border-l-4 border-purple-500 p-6 transition-all duration-300">
                     <div className="flex items-center gap-3 mb-3">
-                      <Activity className="w-6 h-6 text-emerald-500" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Company Tone</h3>
+                      <Activity className="w-6 h-6 text-purple-400" strokeWidth={2} />
+                      <h3 className="text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">Company Tone</h3>
                     </div>
                     <p className="text-base text-slate-200 leading-relaxed font-sans">{result.company_tone}</p>
                   </div>
