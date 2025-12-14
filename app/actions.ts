@@ -341,8 +341,9 @@ export async function analyzeUrl(inputUrl: string): Promise<AnalysisResult> {
       leadership: leadershipData.status === 'fulfilled' ? leadershipData.value : 'No data',
       socialMedia: socialData.status === 'fulfilled' ? socialData.value : 'No data',
       news: newsData.status === 'fulfilled' ? newsData.value : 'No data',
-      financials: (financialData.status === 'fulfilled' ? financialData.value : 'No data') +
-        (gptFinancialData ? `\n\n=== GPT-VERIFIED SWEDISH DATA ===\n${gptFinancialData}` : ''),
+      // PUT GPT-VERIFIED DATA FIRST so it's never truncated
+      financials: (gptFinancialData ? `=== GPT-VERIFIED SWEDISH DATA (ORG ${orgNumber}) ===\n${gptFinancialData}\n\n` : '') +
+        (financialData.status === 'fulfilled' ? financialData.value : 'No data'),
       signals: signalsData.status === 'fulfilled' ? signalsData.value : 'No data',
     };
 
@@ -388,9 +389,10 @@ Analysis Framework:
 4. **Sales Hooks** (2 bullet points, 8-12 words each): Direct value propositions tied to pain points
 5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures.
    CRITICAL FOR SWEDISH COMPANIES:
-   - Data tagged [Allabolag-OrgNr-XXXXXX] is 100% VERIFIED (matched by org number) - ALWAYS USE IT.
-   - Data under "=== GPT-VERIFIED SWEDISH DATA ===" is 100% VERIFIED from Allabolag - ALWAYS USE IT.
-   - Data tagged [Allabolag-URL] or [Allabolag] is also reliable for .se domains - trust it.
+   - Data under "=== GPT-VERIFIED SWEDISH DATA (ORG XXXXX-XXXX) ===" is 100% VERIFIED from Allabolag - ALWAYS USE IT FIRST.
+   - This GPT-verified data appears FIRST in the financials section - prioritize it over other search results.
+   - Ignore any unrelated company names (Infinera, Infinigate, etc.) - they are name collisions.
+   - Data tagged [Allabolag-OrgNr-XXXXXX], [Allabolag-URL] or [Allabolag] is also reliable.
 6. **Company Tone** (2-4 words): Brand voice (e.g., "Formal Enterprise", "Innovative Startup")
 
 Output ONLY valid JSON:
