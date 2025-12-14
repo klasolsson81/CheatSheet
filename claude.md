@@ -242,7 +242,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
-**Commit: [PENDING] - fix: revert site filter and keep increased search limits**
+**Commit: `6fe41ec` - fix: revert site filter and keep increased search limits**
 - REVERTED `site:linkedin.com/posts` filter (caused irrelevant results from unrelated companies)
 - KEPT increased maxResults: Social Media (5→10), News (4→8), Growth Signals (3→6)
 - KEPT MANDATORY SOURCE LINKING rule improvements
