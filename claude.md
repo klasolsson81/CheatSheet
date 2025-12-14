@@ -44,7 +44,7 @@ RECON is an AI-powered B2B sales intelligence tool that analyzes companies in re
 - Tailors ice breakers and insights to specific person/department
 
 ### 3. **Multi-Language Support** (Swedish/English)
-- Language switcher with flags (🇸🇪 SV / 🇬🇧 EN) in top-right corner
+- Language switcher (SV / EN) in top-right corner
 - Translates all UI elements:
   - Header (title, subtitle)
   - Input form (placeholder, buttons, labels)
@@ -225,9 +225,15 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
+**Commit: `8de278a` - fix: remove emoji flags and clean up language switcher**
+- Removed emoji flags that weren't rendering properly
+- Clean design with just "SV" and "EN" text
+- Added blue shadow to active language
+- Tighter spacing and better touch targets
+
 **Commit: `223e901` - feat: add multi-language support (Swedish/English)**
 - Created `translations.ts` with complete Swedish and English translations
-- Added language switcher with flags (🇸🇪 SV / 🇬🇧 EN) in top-right corner
+- Added language switcher in top-right corner
 - Language preference saved in localStorage
 - Instant switching without page reload
 - Translated all UI elements:
