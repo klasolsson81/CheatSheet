@@ -17,7 +17,7 @@ RECON is an AI-powered B2B sales intelligence tool that analyzes companies in re
 - **AI:** OpenAI GPT-5.2
 - **Search:** Tavily API (advanced web search + content extraction)
 - **Deployment:** Vercel
-- **Font:** Inter (sans-serif), Geist Mono (monospace)
+- **Font:** Atkinson Hyperlegible (sans-serif, optimized for readability), Geist Mono (monospace)
 
 ### Repository
 
@@ -44,7 +44,8 @@ RECON is an AI-powered B2B sales intelligence tool that analyzes companies in re
 - Tailors ice breakers and insights to specific person/department
 
 ### 3. **Multi-Language Support** (Swedish/English)
-- Language switcher (SV / EN) in top-right corner
+- Language switcher with flag icons (🇸🇪 SV / 🇬🇧 EN) in top-right corner
+- SVG flags for reliable cross-browser display
 - Translates all UI elements:
   - Header (title, subtitle)
   - Input form (placeholder, buttons, labels)
@@ -132,8 +133,14 @@ cursor-pointer
 ### Typography
 
 - **Headers/Titles:** Geist Mono (monospace, uppercase, tracking-wider)
-- **Body Text:** Inter (sans-serif, regular weight)
+- **Body Text:** Atkinson Hyperlegible (sans-serif, optimized for readability and accessibility)
 - **Ice Breaker Numbers:** Mono bold (`#1`, `#2`, `#3`)
+
+**Why Atkinson Hyperlegible?**
+- Designed by Braille Institute for maximum legibility
+- Greater character differentiation (e.g., 1 vs l, 0 vs O)
+- Improved readability for low vision users
+- Open-source and free to use
 
 ### Spacing & Layout
 
@@ -231,6 +238,13 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 ## Recent Changes
 
 ### 2025-12-14 (Current Session)
+
+**Commit: `[pending]` - feat: add Atkinson Hyperlegible font and flag icons**
+- Replaced Inter with Atkinson Hyperlegible for improved readability
+- Added via Google Fonts CDN for instant loading
+- Created SVG flag components (Swedish and British)
+- Updated language switcher to show flag icons + text
+- Flags display reliably across all browsers (no emoji dependency)
 
 **Commit: `d9afb27` - feat: AI generates content in selected language**
 - Added language parameter to `analyzeUrl()` function

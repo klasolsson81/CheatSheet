@@ -17,6 +17,33 @@ import {
 import { analyzeUrl } from './actions';
 import { type Language, getTranslation } from './translations';
 
+// Flag SVG Components
+const SwedishFlag = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10" className="w-5 h-3.5">
+    <rect width="16" height="10" fill="#006AA7"/>
+    <rect x="5" width="2" height="10" fill="#FECC00"/>
+    <rect y="4" width="16" height="2" fill="#FECC00"/>
+  </svg>
+);
+
+const BritishFlag = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" className="w-5 h-3.5">
+    <clipPath id="s">
+      <path d="M0,0 v30 h60 v-30 z"/>
+    </clipPath>
+    <clipPath id="t">
+      <path d="M30,15 h30 v15 z v-15 h-30 z h-30 v15 z v-15 h30 z"/>
+    </clipPath>
+    <g clipPath="url(#s)">
+      <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
+      <path d="M0,0 L60,30 M60,0 L0,30" clipPath="url(#t)" stroke="#C8102E" strokeWidth="4"/>
+      <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10"/>
+      <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6"/>
+    </g>
+  </svg>
+);
+
 interface AnalysisResult {
   summary: string;
   ice_breaker: string[];
@@ -152,29 +179,31 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="absolute top-8 right-8 flex items-center gap-1 bg-slate-900/80 backdrop-blur-sm rounded-lg p-1.5 border border-slate-700"
+            className="absolute top-8 right-8 flex items-center gap-2 bg-slate-900/80 backdrop-blur-sm rounded-lg p-2 border border-slate-700"
           >
             <button
               onClick={() => handleLanguageChange('sv')}
-              className={`px-4 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
                 language === 'sv'
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
                   : 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
               title="Svenska"
             >
-              SV
+              <SwedishFlag />
+              <span>SV</span>
             </button>
             <button
               onClick={() => handleLanguageChange('en')}
-              className={`px-4 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
                 language === 'en'
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
                   : 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
               title="English"
             >
-              EN
+              <BritishFlag />
+              <span>EN</span>
             </button>
           </motion.div>
         )}
