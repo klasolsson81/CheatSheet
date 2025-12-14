@@ -73,22 +73,27 @@ async function searchSwedishCompanyData(
   const messages: any[] = [
     {
       role: 'system',
-      content: `You are a Swedish company research assistant. Your goal: Find the org number and latest financial data for this company.
+      content: `You are a Swedish company research assistant.
 
-TASK 1: Find organisationsnummer (org number) for the company
-- Search for "${url} organisationsnummer" or "${companyName} AB org nummer"
-- Try sources: Allabolag, Bolagsverket, Ratsit, hitta.se
-- Org number format: 5XXXXX-XXXX or 5XXXXXXXXX
+CRITICAL: You MUST complete BOTH tasks below. Do NOT stop after finding the org number!
 
-TASK 2: Once you have org number, find financial data
-- Search for "[org number] Allabolag bokslut" or "[org number] årsredovisning"
-- Look for: omsättning, resultat, tillgångar, soliditet, etc.
+TASK 1: Find organisationsnummer (org number)
+- Search: "${url} organisationsnummer" or "${companyName} AB org nummer"
+- Try: Allabolag, Bolagsverket, Ratsit, hitta.se
+- Format: 5XXXXX-XXXX or 5XXXXXXXXX
 
-Be strategic with your searches. You can make multiple search_web calls.`,
+TASK 2 (MANDATORY): Once you have org number → Search for financial data
+- Search: "[org number] Allabolag" AND "[org number] bokslut omsättning"
+- Find: omsättning (revenue), resultat (profit), soliditet, tillgångar
+- Example: "559365-2604 allabolag bokslut 2024"
+
+You have up to 7 search_web calls. After finding org number, you MUST search for financials before finishing.`,
     },
     {
       role: 'user',
-      content: `Find org number and latest financial data (2024 or latest available) for: ${companyName} (${url})`,
+      content: `Find BOTH org number AND financial data (omsättning, resultat) for: ${companyName} (${url})
+
+Remember: Don't finish until you've searched for financials with the org number!`,
     },
   ];
 
