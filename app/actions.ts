@@ -389,10 +389,11 @@ Analysis Framework:
 4. **Sales Hooks** (2 bullet points, 8-12 words each): Direct value propositions tied to pain points
 5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures.
    CRITICAL FOR SWEDISH COMPANIES:
-   - Data under "=== GPT-VERIFIED SWEDISH DATA (ORG XXXXX-XXXX) ===" is 100% VERIFIED from Allabolag - ALWAYS USE IT FIRST.
-   - This GPT-verified data appears FIRST in the financials section - prioritize it over other search results.
+   - Data under "=== GPT-VERIFIED SWEDISH DATA (ORG XXXXX-XXXX) ===" is 100% VERIFIED from Allabolag.
+   - DO NOT copy-paste the raw data! Instead, analyze it and write a natural summary.
+   - Convert Swedish terms: "Omsättning" → revenue, "Resultat" → profit, "Soliditet" → equity ratio, "tkr" → thousands SEK.
+   - Example: "2024 revenue 3.5M SEK, profit 363K SEK (10.5% margin), equity ratio 19.5% indicates bootstrap growth with modest leverage."
    - Ignore any unrelated company names (Infinera, Infinigate, etc.) - they are name collisions.
-   - Data tagged [Allabolag-OrgNr-XXXXXX], [Allabolag-URL] or [Allabolag] is also reliable.
 6. **Company Tone** (2-4 words): Brand voice (e.g., "Formal Enterprise", "Innovative Startup")
 
 Output ONLY valid JSON:
