@@ -242,6 +242,15 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
+**Commit: [PENDING] - fix: inject source URLs into research data for better ice breaker linking**
+- Updated all Tavily search result mappings to include `[SOURCE: url]` tags
+- Modified 6 research streams: Leadership, Social Media, News, Financials (5 locations), Growth Signals
+- Each search result now formatted as `[SOURCE: https://...] Title: Content`
+- Added SOURCE LINKING instruction to GPT system prompt
+- AI now uses specific deep links from research data instead of defaulting to main website
+- Improves accuracy of ice breaker source attribution
+- Better tracking of where each insight came from
+
 **Commit: `9c025f1` - feat: make ice breakers clickable with source URLs**
 - Changed ice_breaker from string[] to IceBreaker[] with { text, source_url }
 - Updated GPT prompt to return source URLs for each ice breaker

@@ -298,7 +298,7 @@ export async function analyzeUrl(
         }
       ).then(res => {
         if (!res.results || res.results.length === 0) return 'No leadership data found';
-        return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
+        return res.results.map(r => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
       }),
 
       // 3. Social Media & Personal Activity (ENHANCED for targeted search)
@@ -312,7 +312,7 @@ export async function analyzeUrl(
         }
       ).then(res => {
         if (!res.results || res.results.length === 0) return 'No social activity found';
-        return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
+        return res.results.map(r => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
       }),
 
       // 4. Recent News & Press Releases
@@ -321,7 +321,7 @@ export async function analyzeUrl(
         searchDepth: 'advanced',
       }).then(res => {
         if (!res.results || res.results.length === 0) return 'No recent news found';
-        return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
+        return res.results.map(r => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
       }),
 
       // 5. Financial Results & Reports (ENHANCED for Swedish companies)
@@ -353,11 +353,11 @@ export async function analyzeUrl(
         }) : Promise.resolve(null),
       ]).then(([general, orgSearch, urlSearch, allabolag1, allabolag2]) => {
         const results = [];
-        if (general?.results) results.push(...general.results.map((r: any) => `${r.title}: ${r.content}`));
-        if (orgSearch?.results) results.push(...orgSearch.results.map((r: any) => `[Allabolag-OrgNr-${orgNumber}] ${r.title}: ${r.content}`));
-        if (urlSearch?.results) results.push(...urlSearch.results.map((r: any) => `[Allabolag-URL] ${r.title}: ${r.content}`));
-        if (allabolag1?.results) results.push(...allabolag1.results.map((r: any) => `[Allabolag] ${r.title}: ${r.content}`));
-        if (allabolag2?.results) results.push(...allabolag2.results.map((r: any) => `[Allabolag] ${r.title}: ${r.content}`));
+        if (general?.results) results.push(...general.results.map((r: any) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`));
+        if (orgSearch?.results) results.push(...orgSearch.results.map((r: any) => `[SOURCE: ${r.url}] [Allabolag-OrgNr-${orgNumber}] ${r.title}: ${r.content}`));
+        if (urlSearch?.results) results.push(...urlSearch.results.map((r: any) => `[SOURCE: ${r.url}] [Allabolag-URL] ${r.title}: ${r.content}`));
+        if (allabolag1?.results) results.push(...allabolag1.results.map((r: any) => `[SOURCE: ${r.url}] [Allabolag] ${r.title}: ${r.content}`));
+        if (allabolag2?.results) results.push(...allabolag2.results.map((r: any) => `[SOURCE: ${r.url}] [Allabolag] ${r.title}: ${r.content}`));
         return results.length > 0 ? results.join('\n') : 'No financial data found';
       }),
 
@@ -367,7 +367,7 @@ export async function analyzeUrl(
         searchDepth: 'advanced',
       }).then(res => {
         if (!res.results || res.results.length === 0) return 'No growth signals found';
-        return res.results.map(r => `${r.title}: ${r.content}`).join('\n');
+        return res.results.map(r => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
       }),
     ]);
 
@@ -416,6 +416,7 @@ You are an elite B2B sales intelligence analyst. Your mission: Extract CONCISE, 
 - PRIORITY: Founder/CEO LinkedIn post from this month about specific topic → USE IT
 - FALLBACK: If no recent personal posts → mention recent company news instead
 - AUTHENTICITY > RECENCY: 6-week personal insight beats yesterday's generic PR
+- SOURCE LINKING: The research data now includes [SOURCE: url] tags. You MUST use the specific URL from the [SOURCE: ...] tag that corresponds to the fact/post you are mentioning. Do NOT default to the main website if a specific deep link is available.
 
 GOOD EXAMPLES:
 ✅ "Caught Nemanja's post on balancing speed vs. learning—how's that playing out in real sprints?"
