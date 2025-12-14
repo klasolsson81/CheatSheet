@@ -43,14 +43,28 @@ RECON is an AI-powered B2B sales intelligence tool that analyzes companies in re
 - Specific focus area (e.g., sustainability, AI)
 - Tailors ice breakers and insights to specific person/department
 
-### 3. **Swedish Company Intelligence** (Special)
+### 3. **Multi-Language Support** (Swedish/English)
+- Language switcher with flags (🇸🇪 SV / 🇬🇧 EN) in top-right corner
+- Translates all UI elements:
+  - Header (title, subtitle)
+  - Input form (placeholder, buttons, labels)
+  - Advanced search fields (all labels and placeholders)
+  - Loading messages (8 rotating messages)
+  - Error messages
+  - Results section titles
+  - Footer status
+- Language preference saved in localStorage
+- Instant switching without page reload
+- Default: English (EN)
+
+### 4. **Swedish Company Intelligence** (Special)
 - Auto-detects `.se` domains
 - GPT-driven search for organisationsnummer (org number)
 - Fetches verified financial data from Allabolag
 - Converts Swedish terms (Omsättning → revenue, Resultat → profit)
 - Multi-source Allabolag search (by org number, URL, company name)
 
-### 4. **AI Analysis Output**
+### 5. **AI Analysis Output**
 
 Generated insights include:
 
@@ -70,7 +84,7 @@ Generated insights include:
 
 6. **Company Tone** - 2-4 word brand voice description
 
-### 5. **Safety Features**
+### 6. **Safety Features**
 - NSFW content detection (blocks adult/gambling/hate speech)
 - Grounding checks (prevents hallucinations about similar brands)
 - API key validation
@@ -129,6 +143,7 @@ cursor-pointer
 app/
 ├── page.tsx           # Main UI component (client-side)
 ├── actions.ts         # Server actions (API logic)
+├── translations.ts    # i18n translations (Swedish/English)
 ├── globals.css        # Global styles + Tailwind config
 ├── layout.tsx         # Root layout (fonts, metadata)
 └── fonts/             # Inter & Geist Mono font files
@@ -138,13 +153,28 @@ claude.md              # This file (project documentation)
 
 ### Key Files
 
-#### `app/page.tsx` (1,439 lines)
+#### `app/page.tsx` (~500 lines)
 - Client component (`'use client'`)
-- State management (URL, loading, results, advanced params)
+- State management (URL, loading, results, advanced params, language)
+- Language switcher with localStorage persistence
 - Form handling + validation
-- Loading state with rotating messages
+- Loading state with rotating messages (translated)
 - Staggered card animations (Framer Motion)
 - Ice breaker options displayed as numbered cards
+- All text content uses translation system
+
+#### `app/translations.ts` (120 lines)
+- Type-safe translation system
+- Language type: `'sv' | 'en'`
+- Complete Swedish and English translations for:
+  - Header (title, subtitle)
+  - Form inputs and buttons
+  - Advanced search fields
+  - Loading messages
+  - Error messages
+  - Results section titles
+  - Footer
+- Export: `getTranslation(lang: Language)`
 
 #### `app/actions.ts` (551 lines)
 - Server action: `analyzeUrl(inputUrl, advancedParams?)`
@@ -194,6 +224,22 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 ## Recent Changes
 
 ### 2025-12-14 (Current Session)
+
+**Commit: `[pending]` - feat: add multi-language support (Swedish/English)**
+- Created `translations.ts` with complete Swedish and English translations
+- Added language switcher with flags (🇸🇪 SV / 🇬🇧 EN) in top-right corner
+- Language preference saved in localStorage
+- Instant switching without page reload
+- Translated all UI elements:
+  - Header (title, subtitle)
+  - Form inputs and buttons
+  - Advanced search fields (labels and placeholders)
+  - Loading messages (8 rotating messages)
+  - Error messages
+  - Results section titles
+  - Footer status
+- Type-safe translation system with `Language` type
+- Default language: English (EN)
 
 **Commit: `72aa9c9` - feat: add hover effects and multiple ice breaker options**
 - Added smooth hover effects to all cards (scale, glow, lift, border brighten)

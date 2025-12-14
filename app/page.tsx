@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
@@ -15,6 +15,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { analyzeUrl } from './actions';
+import { type Language, getTranslation } from './translations';
 
 interface AnalysisResult {
   summary: string;
@@ -26,18 +27,11 @@ interface AnalysisResult {
   error?: string;
 }
 
-const loadingMessages = [
-  'Extracting website content...',
-  'Researching leadership team...',
-  'Scanning social media activity...',
-  'Analyzing recent news...',
-  'Checking financial reports...',
-  'Detecting growth signals...',
-  'AI analyzing all sources...',
-  'Generating insights...',
-];
-
 export default function Home() {
+  // Language State
+  const [language, setLanguage] = useState<Language>('en');
+  const [mounted, setMounted] = useState(false);
+
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -52,6 +46,24 @@ export default function Home() {
   const [jobTitle, setJobTitle] = useState('');
   const [specificFocus, setSpecificFocus] = useState('');
 
+  // Load language from localStorage on mount
+  useEffect(() => {
+    const savedLang = localStorage.getItem('recon-language') as Language;
+    if (savedLang && (savedLang === 'sv' || savedLang === 'en')) {
+      setLanguage(savedLang);
+    }
+    setMounted(true);
+  }, []);
+
+  // Save language to localStorage when changed
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem('recon-language', lang);
+  };
+
+  // Get current translations
+  const t = getTranslation(language);
+
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
@@ -63,7 +75,7 @@ export default function Home() {
     // Rotate loading messages
     let messageIndex = 0;
     const messageInterval = setInterval(() => {
-      setLoadingMessage(loadingMessages[messageIndex % loadingMessages.length]);
+      setLoadingMessage(t.loadingMessages[messageIndex % t.loadingMessages.length]);
       messageIndex++;
     }, 2000);
 
@@ -80,13 +92,13 @@ export default function Home() {
 
       // Check for NSFW content flag
       if (analysis.error === 'NSFW_CONTENT') {
-        setError('Analysis blocked: Content flagged as unsafe.');
+        setError(t.errorNsfw);
         setResult(null);
       } else {
         setResult(analysis);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Analysis failed');
+      setError(err instanceof Error ? err.message : t.errorGeneric);
     } finally {
       clearInterval(messageInterval);
       setLoading(false);
@@ -135,6 +147,38 @@ export default function Home() {
       />
 
       <div className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
+        {/* Language Switcher */}
+        {mounted && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="absolute top-8 right-8 flex items-center gap-2 bg-slate-900/80 backdrop-blur-sm rounded-lg p-2 border border-slate-700"
+          >
+            <button
+              onClick={() => handleLanguageChange('sv')}
+              className={`px-3 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
+                language === 'sv'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+              title="Svenska"
+            >
+              🇸🇪 SV
+            </button>
+            <button
+              onClick={() => handleLanguageChange('en')}
+              className={`px-3 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
+                language === 'en'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+              title="English"
+            >
+              🇬🇧 EN
+            </button>
+          </motion.div>
+        )}
+
         {/* Header - Tactical */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -144,11 +188,11 @@ export default function Home() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <Radar className="w-7 h-7 text-emerald-500" strokeWidth={2.5} />
             <h1 className="text-6xl font-bold tracking-widest text-white font-mono">
-              RECON
+              {t.title}
             </h1>
           </div>
           <p className="text-slate-400 text-sm font-mono tracking-wide uppercase">
-            Tactical intelligence for your next deal
+            {t.subtitle}
           </p>
         </motion.div>
 
@@ -168,7 +212,7 @@ export default function Home() {
                 type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="TARGET URL"
+                placeholder={t.inputPlaceholder}
                 className="flex-1 bg-transparent px-4 py-4 text-base text-white placeholder-slate-600 outline-none font-mono tracking-wide"
                 disabled={loading}
               />
@@ -177,7 +221,7 @@ export default function Home() {
                 disabled={loading || !url.trim()}
                 className="m-1.5 px-8 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:cursor-not-allowed rounded-md font-mono text-sm font-bold tracking-wider uppercase transition-all duration-200"
               >
-                {loading ? 'ANALYZING...' : 'EXECUTE'}
+                {loading ? t.analyzingButton : t.executeButton}
               </button>
             </div>
 
@@ -189,7 +233,7 @@ export default function Home() {
                 className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-500 hover:text-white transition-colors cursor-pointer font-mono tracking-wider uppercase"
               >
                 <span className="text-sm font-bold">{showAdvanced ? '[−]' : '[+]'}</span>
-                <span>Advanced Targeting</span>
+                <span>{t.advancedToggle}</span>
               </button>
             </div>
 
@@ -205,20 +249,20 @@ export default function Home() {
                 >
                   <div className="bg-black/60 backdrop-blur-sm border border-slate-800 rounded-lg p-6 space-y-4">
                     <p className="text-xs text-slate-500 mb-4 font-mono tracking-wide uppercase">
-                      Optional: Target specific contacts or departments within large organizations
+                      {t.advancedDescription}
                     </p>
 
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Contact Person */}
                       <div>
                         <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
-                          Contact Person
+                          {t.contactPersonLabel}
                         </label>
                         <input
                           type="text"
                           value={contactPerson}
                           onChange={(e) => setContactPerson(e.target.value)}
-                          placeholder="e.g., John Smith or LinkedIn URL"
+                          placeholder={t.contactPersonPlaceholder}
                           className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
                           disabled={loading}
                         />
@@ -227,13 +271,13 @@ export default function Home() {
                       {/* Job Title */}
                       <div>
                         <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
-                          Job Title
+                          {t.jobTitleLabel}
                         </label>
                         <input
                           type="text"
                           value={jobTitle}
                           onChange={(e) => setJobTitle(e.target.value)}
-                          placeholder="e.g., VP of Engineering, Head of Sales"
+                          placeholder={t.jobTitlePlaceholder}
                           className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
                           disabled={loading}
                         />
@@ -242,13 +286,13 @@ export default function Home() {
                       {/* Department */}
                       <div>
                         <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
-                          Department/Division
+                          {t.departmentLabel}
                         </label>
                         <input
                           type="text"
                           value={department}
                           onChange={(e) => setDepartment(e.target.value)}
-                          placeholder="e.g., Marketing, R&D, Sales"
+                          placeholder={t.departmentPlaceholder}
                           className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
                           disabled={loading}
                         />
@@ -257,13 +301,13 @@ export default function Home() {
                       {/* Location */}
                       <div>
                         <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
-                          Location/Office
+                          {t.locationLabel}
                         </label>
                         <input
                           type="text"
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
-                          placeholder="e.g., Gothenburg, Stockholm, Germany"
+                          placeholder={t.locationPlaceholder}
                           className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
                           disabled={loading}
                         />
@@ -272,13 +316,13 @@ export default function Home() {
                       {/* Specific Focus */}
                       <div className="md:col-span-2">
                         <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
-                          Specific Focus/Interest
+                          {t.specificFocusLabel}
                         </label>
                         <input
                           type="text"
                           value={specificFocus}
                           onChange={(e) => setSpecificFocus(e.target.value)}
-                          placeholder="e.g., sustainability, digitalization, AI transformation"
+                          placeholder={t.specificFocusPlaceholder}
                           className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
                           disabled={loading}
                         />
@@ -345,7 +389,7 @@ export default function Home() {
                   <div className="flex items-center gap-4 mb-6">
                     <MessageSquare className="w-7 h-7 text-blue-400" strokeWidth={2} />
                     <h2 className="text-2xl font-bold text-blue-400 font-mono tracking-wider uppercase">
-                      Ice Breaker Options
+                      {t.iceBreakersTitle}
                     </h2>
                   </div>
                   <div className="space-y-4">
@@ -369,7 +413,7 @@ export default function Home() {
                 <div className="bg-slate-900 rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-slate-500/20 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer">
                   <div className="flex items-center gap-3 mb-3">
                     <Target className="w-6 h-6 text-slate-400" strokeWidth={2} />
-                    <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Company Overview</h3>
+                    <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">{t.companyOverviewTitle}</h3>
                   </div>
                   <p className="text-base text-slate-200 leading-relaxed font-sans">{result.summary}</p>
                 </div>
@@ -381,7 +425,7 @@ export default function Home() {
                   <div className="bg-slate-900 bg-green-950/30 rounded-xl shadow-lg border-l-4 border-green-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-green-400 cursor-pointer">
                     <div className="flex items-center gap-3 mb-4">
                       <TrendingUp className="w-6 h-6 text-green-400" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-green-400 font-mono tracking-wider uppercase">Sales Hooks</h3>
+                      <h3 className="text-lg font-bold text-green-400 font-mono tracking-wider uppercase">{t.salesHooksTitle}</h3>
                     </div>
                     <ul className="space-y-3">
                       {result.sales_hooks.map((hook, idx) => (
@@ -399,7 +443,7 @@ export default function Home() {
                   <div className="bg-slate-900 bg-red-950/30 rounded-xl shadow-lg border-l-4 border-red-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-red-400 cursor-pointer">
                     <div className="flex items-center gap-3 mb-4">
                       <AlertTriangle className="w-6 h-6 text-red-400" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-red-400 font-mono tracking-wider uppercase">Pain Points</h3>
+                      <h3 className="text-lg font-bold text-red-400 font-mono tracking-wider uppercase">{t.painPointsTitle}</h3>
                     </div>
                     <ul className="space-y-3">
                       {result.pain_points.map((point, idx) => (
@@ -419,7 +463,7 @@ export default function Home() {
                   <div className="bg-slate-900 rounded-xl shadow-lg border-l-4 border-purple-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-purple-400 cursor-pointer">
                     <div className="flex items-center gap-3 mb-3">
                       <DollarSign className="w-6 h-6 text-purple-400" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">Financial Signals</h3>
+                      <h3 className="text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">{t.financialSignalsTitle}</h3>
                     </div>
                     <p className="text-base text-slate-200 leading-relaxed font-sans">{result.financial_signals}</p>
                   </div>
@@ -430,7 +474,7 @@ export default function Home() {
                   <div className="bg-slate-900 rounded-xl shadow-lg border-l-4 border-purple-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-purple-400 cursor-pointer">
                     <div className="flex items-center gap-3 mb-3">
                       <Activity className="w-6 h-6 text-purple-400" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">Company Tone</h3>
+                      <h3 className="text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">{t.companyToneTitle}</h3>
                     </div>
                     <p className="text-base text-slate-200 leading-relaxed font-sans">{result.company_tone}</p>
                   </div>
@@ -443,7 +487,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="mt-20 pt-8 border-t border-slate-800">
           <p className="text-center text-xs text-slate-500 font-mono tracking-wider uppercase">
-            System Status: Online // Powered by Intelligence Engine
+            {t.footerStatus}
           </p>
         </footer>
       </div>
