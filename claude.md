@@ -242,7 +242,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
-**Commit: `[pending]` - feat: make ice breakers clickable with source URLs**
+**Commit: `9c025f1` - feat: make ice breakers clickable with source URLs**
 - Changed ice_breaker from string[] to IceBreaker[] with { text, source_url }
 - Updated GPT prompt to return source URLs for each ice breaker
 - Ice breakers now clickable when source URL available
