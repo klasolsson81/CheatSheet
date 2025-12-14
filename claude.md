@@ -239,7 +239,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-14 (Current Session)
 
-**Commit: `[pending]` - feat: add Atkinson Hyperlegible font and flag icons**
+**Commit: `4b60571` - feat: add Atkinson Hyperlegible font and SVG flag icons**
 - Replaced Inter with Atkinson Hyperlegible for improved readability
 - Added via Google Fonts CDN for instant loading
 - Created SVG flag components (Swedish and British)
