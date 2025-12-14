@@ -5,7 +5,7 @@ import { tavily } from '@tavily/core';
 
 interface AnalysisResult {
   summary: string;
-  ice_breaker: string;
+  ice_breaker: string[];
   pain_points: string[];
   sales_hooks: string[];
   financial_signals: string;
@@ -393,7 +393,9 @@ You are an elite B2B sales intelligence analyst. Your mission: Extract CONCISE, 
 🎯 CRITICAL: Keep ALL responses SHORT and PUNCHY. No fluff, no generic statements.
 
 🎯 ICE BREAKER RULES (CRITICAL - READ CAREFULLY):
-- MAX LENGTH: 15-20 words. Be ruthlessly concise.
+- PROVIDE 2-3 DIFFERENT ICE BREAKER OPTIONS (return as an array)
+- MAX LENGTH PER ICE BREAKER: 15-20 words. Be ruthlessly concise.
+- VARY THE APPROACH: Each suggestion should take a different angle (e.g., one about recent post, one about company news, one about growth signals)
 - TONE: Conversational peer, not stalker. Sound natural, not like you copied LinkedIn.
 - RECENCY: Use MOST RECENT activity (2-4 weeks max, current month preferred)
 - SKIP: Generic PR, corporate announcements, promotional fluff
@@ -414,7 +416,7 @@ BAD EXAMPLES (DO NOT USE):
 
 Analysis Framework:
 1. **Summary** (1-2 sentences max): What they DO and their value prop
-2. **Ice Breaker** (1 sentence): Ultra-specific, recent, personal hook based on CEO/leadership social posts, news, or events
+2. **Ice Breakers** (Array of 2-3 strings): Ultra-specific, recent, personal hooks from different angles (social posts, company news, growth signals)
 3. **Pain Points** (3 bullet points, 5-10 words each): Specific operational/strategic challenges
 4. **Sales Hooks** (2 bullet points, 8-12 words each): Direct value propositions tied to pain points
 5. **Financial Signals** (1-2 sentences): Growth indicators, hiring, funding, or cost pressures.
@@ -429,7 +431,7 @@ Analysis Framework:
 Output ONLY valid JSON:
 {
   "summary": "Brief, punchy summary",
-  "ice_breaker": "Specific, personal opener referencing recent activity",
+  "ice_breaker": ["Opener 1 (e.g., from social post)", "Opener 2 (e.g., from company news)", "Opener 3 (e.g., from growth signals)"],
   "pain_points": ["Challenge 1", "Challenge 2", "Challenge 3"],
   "sales_hooks": ["Hook 1", "Hook 2"],
   "financial_signals": "Brief growth/financial status",
@@ -495,7 +497,7 @@ Analyze and provide sales intelligence.`;
       return {
         error: 'NSFW_CONTENT',
         summary: '',
-        ice_breaker: '',
+        ice_breaker: [],
         pain_points: [],
         sales_hooks: [],
         financial_signals: '',
@@ -504,7 +506,8 @@ Analyze and provide sales intelligence.`;
     }
 
     // Validate structure
-    if (!analysis.summary || !analysis.ice_breaker || !analysis.pain_points ||
+    if (!analysis.summary || !analysis.ice_breaker || !Array.isArray(analysis.ice_breaker) ||
+        analysis.ice_breaker.length === 0 || !analysis.pain_points ||
         !analysis.sales_hooks || !analysis.financial_signals || !analysis.company_tone) {
       throw new Error('AI returned incomplete analysis. Please try again.');
     }

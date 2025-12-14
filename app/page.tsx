@@ -18,7 +18,7 @@ import { analyzeUrl } from './actions';
 
 interface AnalysisResult {
   summary: string;
-  ice_breaker: string;
+  ice_breaker: string[];
   pain_points: string[];
   sales_hooks: string[];
   financial_signals: string;
@@ -339,22 +339,34 @@ export default function Home() {
               exit="hidden"
               className="space-y-8"
             >
-              {/* Ice Breaker */}
+              {/* Ice Breakers */}
               <motion.div variants={cardVariants}>
-                <div className="bg-slate-900 bg-blue-950/30 rounded-xl shadow-lg border-l-4 border-blue-500 p-8 transition-all duration-300">
-                  <div className="flex items-center gap-4 mb-4">
+                <div className="bg-slate-900 bg-blue-950/30 rounded-xl shadow-lg border-l-4 border-blue-500 p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-400">
+                  <div className="flex items-center gap-4 mb-6">
                     <MessageSquare className="w-7 h-7 text-blue-400" strokeWidth={2} />
                     <h2 className="text-2xl font-bold text-blue-400 font-mono tracking-wider uppercase">
-                      Perfect Ice Breaker
+                      Ice Breaker Options
                     </h2>
                   </div>
-                  <p className="text-lg text-slate-200 leading-relaxed font-sans">{result.ice_breaker}</p>
+                  <div className="space-y-4">
+                    {result.ice_breaker.map((breaker, idx) => (
+                      <div
+                        key={idx}
+                        className="p-4 bg-blue-950/20 rounded-lg border border-blue-800/30 hover:bg-blue-900/30 hover:border-blue-600/50 transition-all duration-200 cursor-pointer"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-blue-400 font-mono font-bold text-sm mt-0.5">#{idx + 1}</span>
+                          <p className="text-base text-slate-200 leading-relaxed font-sans flex-1">{breaker}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
 
               {/* Company Overview */}
               <motion.div variants={cardVariants}>
-                <div className="bg-slate-900 rounded-xl shadow-lg p-6 transition-all duration-300">
+                <div className="bg-slate-900 rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-slate-500/20 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer">
                   <div className="flex items-center gap-3 mb-3">
                     <Target className="w-6 h-6 text-slate-400" strokeWidth={2} />
                     <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">Company Overview</h3>
@@ -366,7 +378,7 @@ export default function Home() {
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Sales Hooks */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900 bg-green-950/30 rounded-xl shadow-lg border-l-4 border-green-500 p-6 transition-all duration-300">
+                  <div className="bg-slate-900 bg-green-950/30 rounded-xl shadow-lg border-l-4 border-green-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-green-400 cursor-pointer">
                     <div className="flex items-center gap-3 mb-4">
                       <TrendingUp className="w-6 h-6 text-green-400" strokeWidth={2} />
                       <h3 className="text-lg font-bold text-green-400 font-mono tracking-wider uppercase">Sales Hooks</h3>
@@ -384,7 +396,7 @@ export default function Home() {
 
                 {/* Pain Points */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900 bg-red-950/30 rounded-xl shadow-lg border-l-4 border-red-500 p-6 transition-all duration-300">
+                  <div className="bg-slate-900 bg-red-950/30 rounded-xl shadow-lg border-l-4 border-red-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-red-400 cursor-pointer">
                     <div className="flex items-center gap-3 mb-4">
                       <AlertTriangle className="w-6 h-6 text-red-400" strokeWidth={2} />
                       <h3 className="text-lg font-bold text-red-400 font-mono tracking-wider uppercase">Pain Points</h3>
@@ -404,7 +416,7 @@ export default function Home() {
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Financial Signals */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900 rounded-xl shadow-lg border-l-4 border-purple-500 p-6 transition-all duration-300">
+                  <div className="bg-slate-900 rounded-xl shadow-lg border-l-4 border-purple-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-purple-400 cursor-pointer">
                     <div className="flex items-center gap-3 mb-3">
                       <DollarSign className="w-6 h-6 text-purple-400" strokeWidth={2} />
                       <h3 className="text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">Financial Signals</h3>
@@ -415,7 +427,7 @@ export default function Home() {
 
                 {/* Company Tone */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900 rounded-xl shadow-lg border-l-4 border-purple-500 p-6 transition-all duration-300">
+                  <div className="bg-slate-900 rounded-xl shadow-lg border-l-4 border-purple-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-purple-400 cursor-pointer">
                     <div className="flex items-center gap-3 mb-3">
                       <Activity className="w-6 h-6 text-purple-400" strokeWidth={2} />
                       <h3 className="text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">Company Tone</h3>
