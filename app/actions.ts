@@ -93,7 +93,7 @@ Be strategic with your searches. You can make multiple search_web calls.`,
   ];
 
   let iterations = 0;
-  const maxIterations = 6;
+  const maxIterations = 8;
   let orgNumber = '';
   let financialData = '';
 
@@ -104,7 +104,7 @@ Be strategic with your searches. You can make multiple search_web calls.`,
       model: 'gpt-5.2',
       messages,
       tools,
-      tool_choice: iterations < 4 ? 'auto' : 'none', // Allow tools for first 3 iterations, then force completion
+      tool_choice: iterations < 7 ? 'auto' : 'none', // Allow tools for first 6 iterations, then force completion
     });
 
     const assistantMessage = response.choices[0].message;
@@ -165,6 +165,7 @@ Be strategic with your searches. You can make multiple search_web calls.`,
   }
 
   console.log(`✅ GPT search complete. Org number: ${orgNumber || 'not found'}`);
+  console.log(`✅ Financial data collected: ${financialData.length} chars`);
   return { orgNumber, financialData };
 }
 
