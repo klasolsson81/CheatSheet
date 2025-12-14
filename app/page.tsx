@@ -180,38 +180,40 @@ export default function Home() {
           onSubmit={handleAnalyze}
           className="mb-16"
         >
-          <div className="relative max-w-4xl mx-auto group">
-            {/* Glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-blue-500/30 to-purple-500/30 rounded-3xl blur-2xl group-focus-within:blur-3xl transition-all duration-300" />
+          <div className="relative max-w-4xl mx-auto">
+            <div className="group">
+              {/* Glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 via-blue-500/30 to-purple-500/30 rounded-3xl blur-2xl group-focus-within:blur-3xl transition-all duration-300" />
 
-            {/* Glass Input Container */}
-            <div className="relative flex items-center bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 shadow-2xl overflow-hidden h-16 group-focus-within:border-cyan-500/50 group-focus-within:shadow-[0_0_30px_rgba(34,211,238,0.3)] transition-all duration-300">
-              <Search className="ml-6 w-7 h-7 text-cyan-400 group-focus-within:text-cyan-300 transition-colors" />
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter company URL (e.g., stripe.com or https://stripe.com)"
-                className="flex-1 bg-transparent px-5 py-5 text-lg text-white placeholder-slate-500 outline-none"
-                disabled={loading}
-              />
-              <button
-                type="submit"
-                disabled={loading || !url.trim()}
-                className="m-2 px-10 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed rounded-2xl font-semibold transition-all duration-200 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] active:scale-95"
-              >
-                {loading ? 'Analyzing...' : 'Analyze'}
-              </button>
+              {/* Glass Input Container */}
+              <div className="relative flex items-center bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 shadow-2xl overflow-hidden h-16 group-focus-within:border-cyan-500/50 group-focus-within:shadow-[0_0_30px_rgba(34,211,238,0.3)] transition-all duration-300">
+                <Search className="ml-6 w-7 h-7 text-cyan-400 group-focus-within:text-cyan-300 transition-colors" />
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="Enter company URL (e.g., stripe.com or https://stripe.com)"
+                  className="flex-1 bg-transparent px-5 py-5 text-lg text-white placeholder-slate-500 outline-none"
+                  disabled={loading}
+                />
+                <button
+                  type="submit"
+                  disabled={loading || !url.trim()}
+                  className="m-2 px-10 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed rounded-2xl font-semibold transition-all duration-200 transform hover:scale-105 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] active:scale-95"
+                >
+                  {loading ? 'Analyzing...' : 'Analyze'}
+                </button>
+              </div>
             </div>
 
             {/* Advanced Search Toggle */}
-            <div className="mt-4 flex justify-center">
+            <div className="relative z-20 mt-4 flex justify-center">
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors cursor-pointer"
               >
-                <span>{showAdvanced ? '−' : '+'}</span>
+                <span className="text-lg font-bold">{showAdvanced ? '−' : '+'}</span>
                 <span>Advanced Search (Target specific person/department)</span>
               </button>
             </div>
@@ -224,7 +226,7 @@ export default function Home() {
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="mt-6 overflow-hidden"
+                  className="relative z-10 mt-6 overflow-hidden"
                 >
                   <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 space-y-4">
                     <p className="text-sm text-slate-400 mb-4">
