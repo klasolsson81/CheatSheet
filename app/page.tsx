@@ -194,6 +194,8 @@ export default function Home() {
                   : 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
               title="Svenska"
+              aria-label="Switch to Swedish language"
+              aria-pressed={language === 'sv'}
             >
               <SwedishFlag />
               <span>SV</span>
@@ -206,6 +208,8 @@ export default function Home() {
                   : 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800'
               }`}
               title="English"
+              aria-label="Switch to English language"
+              aria-pressed={language === 'en'}
             >
               <BritishFlag />
               <span>EN</span>
@@ -242,7 +246,7 @@ export default function Home() {
             {/* Tactical Input Container */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-black/60 backdrop-blur-sm rounded-lg border border-slate-800 overflow-hidden focus-within:border-emerald-500 transition-all duration-200 shadow-lg">
               <div className="flex items-center flex-1">
-                <Search className="ml-4 sm:ml-5 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 flex-shrink-0" />
+                <Search className="ml-4 sm:ml-5 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 flex-shrink-0" aria-hidden="true" />
                 <input
                   type="text"
                   value={url}
@@ -250,12 +254,16 @@ export default function Home() {
                   placeholder={t.inputPlaceholder}
                   className="flex-1 bg-transparent px-3 sm:px-4 py-4 text-sm sm:text-base text-white placeholder-slate-400 outline-none font-mono tracking-wide"
                   disabled={loading}
+                  aria-label="Company website URL"
+                  aria-describedby="url-input-help"
+                  required
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading || !url.trim()}
                 className="m-2 sm:m-1.5 px-6 sm:px-8 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:cursor-not-allowed rounded-md font-mono text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-200 shadow-lg hover:shadow-emerald-500/50"
+                aria-label={loading ? 'Analyzing company...' : 'Analyze company website'}
               >
                 {loading ? t.analyzingButton : t.executeButton}
               </button>
@@ -267,8 +275,11 @@ export default function Home() {
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-300 hover:text-white transition-colors cursor-pointer font-mono tracking-wider uppercase"
+                aria-label="Toggle advanced search options"
+                aria-expanded={showAdvanced}
+                aria-controls="advanced-search-panel"
               >
-                <span className="text-sm font-bold">{showAdvanced ? '[−]' : '[+]'}</span>
+                <span className="text-sm font-bold" aria-hidden="true">{showAdvanced ? '[−]' : '[+]'}</span>
                 <span>{t.advancedToggle}</span>
               </button>
             </div>
@@ -282,6 +293,9 @@ export default function Home() {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
                   className="relative z-10 mt-6 overflow-hidden"
+                  id="advanced-search-panel"
+                  role="region"
+                  aria-label="Advanced search options"
                 >
                   <div className="bg-black/60 backdrop-blur-sm border border-slate-800 rounded-lg p-4 sm:p-6 space-y-4">
                     <p className="text-xs text-slate-300 mb-4 font-mono tracking-wide uppercase leading-relaxed">
@@ -291,76 +305,86 @@ export default function Home() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {/* Contact Person */}
                       <div>
-                        <label className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
+                        <label htmlFor="contact-person" className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
                           {t.contactPersonLabel}
                         </label>
                         <input
+                          id="contact-person"
                           type="text"
                           value={contactPerson}
                           onChange={(e) => setContactPerson(e.target.value)}
                           placeholder={t.contactPersonPlaceholder}
                           className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
+                          aria-label="Contact person name or LinkedIn URL"
                         />
                       </div>
 
                       {/* Job Title */}
                       <div>
-                        <label className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
+                        <label htmlFor="job-title" className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
                           {t.jobTitleLabel}
                         </label>
                         <input
+                          id="job-title"
                           type="text"
                           value={jobTitle}
                           onChange={(e) => setJobTitle(e.target.value)}
                           placeholder={t.jobTitlePlaceholder}
                           className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
+                          aria-label="Target job title"
                         />
                       </div>
 
                       {/* Department */}
                       <div>
-                        <label className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
+                        <label htmlFor="department" className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
                           {t.departmentLabel}
                         </label>
                         <input
+                          id="department"
                           type="text"
                           value={department}
                           onChange={(e) => setDepartment(e.target.value)}
                           placeholder={t.departmentPlaceholder}
                           className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
+                          aria-label="Target department or division"
                         />
                       </div>
 
                       {/* Location */}
                       <div>
-                        <label className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
+                        <label htmlFor="location" className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
                           {t.locationLabel}
                         </label>
                         <input
+                          id="location"
                           type="text"
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
                           placeholder={t.locationPlaceholder}
                           className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
+                          aria-label="Target location or office"
                         />
                       </div>
 
                       {/* Specific Focus */}
                       <div className="sm:col-span-2">
-                        <label className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
+                        <label htmlFor="specific-focus" className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
                           {t.specificFocusLabel}
                         </label>
                         <input
+                          id="specific-focus"
                           type="text"
                           value={specificFocus}
                           onChange={(e) => setSpecificFocus(e.target.value)}
                           placeholder={t.specificFocusPlaceholder}
                           className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
+                          aria-label="Specific focus area or topic"
                         />
                       </div>
                     </div>
@@ -418,6 +442,9 @@ export default function Home() {
               animate="visible"
               exit="hidden"
               className="space-y-6 sm:space-y-8"
+              role="region"
+              aria-label="Analysis results"
+              aria-live="polite"
             >
               {/* Ice Breakers */}
               <motion.div variants={cardVariants}>
@@ -448,6 +475,7 @@ export default function Home() {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="block p-3 sm:p-4 bg-blue-950/20 rounded-lg border border-blue-800/30 hover:bg-blue-900/30 hover:border-blue-600/50 transition-all duration-200 cursor-pointer"
+                          aria-label={`Ice breaker ${idx + 1}: ${breaker.text.slice(0, 50)}... - View source in new tab`}
                         >
                           {content}
                         </a>
@@ -455,6 +483,8 @@ export default function Home() {
                         <div
                           key={idx}
                           className="p-3 sm:p-4 bg-blue-950/20 rounded-lg border border-blue-800/30"
+                          role="article"
+                          aria-label={`Ice breaker ${idx + 1}`}
                         >
                           {content}
                         </div>
