@@ -245,6 +245,17 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
+**Commit: TBD - fix: improve error handling for API limits and failures**
+- Added better error detection and user-friendly messages for Tavily API usage limits
+- Early detection of API limit errors before attempting GPT analysis
+- Check if sufficient data is available before proceeding with analysis
+- Improved error messages to guide users:
+  - "Search API usage limit reached. Please try again later or contact support@tavily.com to upgrade your plan."
+  - "Unable to gather sufficient data for analysis. Please check API limits and try again."
+- Prevents cryptic "AI returned incomplete analysis" errors when API fails
+- **Files modified:** `app/actions.ts`
+- **Impact:** Better user experience when API limits are reached
+
 **Commit: `45da166` - perf: optimize AI search performance (40-60% faster)**
 - Significantly improved search speed by reducing unnecessary operations
 - Swedish GPT search optimizations:

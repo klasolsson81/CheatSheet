@@ -351,6 +351,15 @@ export async function analyzeUrl(
       }),
     ]);
 
+    // Check if API limit errors occurred
+    const hasApiLimitError = [websiteData, leadershipData, socialData, newsData, financialData, signalsData]
+      .some(result => result.status === 'rejected' &&
+        result.reason?.message?.includes('usage limit'));
+
+    if (hasApiLimitError) {
+      throw new Error('Search API usage limit reached. Please try again later or contact support@tavily.com to upgrade your plan.');
+    }
+
     // Aggregate all research data
     const research: ResearchData = {
       websiteContent: websiteData.status === 'fulfilled' ? websiteData.value : 'Failed to extract',
@@ -362,6 +371,17 @@ export async function analyzeUrl(
         (financialData.status === 'fulfilled' ? financialData.value : 'No data'),
       signals: signalsData.status === 'fulfilled' ? signalsData.value : 'No data',
     };
+
+    // Check if we have enough data to proceed
+    const hasAnyData = research.websiteContent !== 'Failed to extract' ||
+                       research.leadership !== 'No data' ||
+                       research.socialMedia !== 'No data' ||
+                       research.news !== 'No data' ||
+                       gptFinancialData.length > 0;
+
+    if (!hasAnyData) {
+      throw new Error('Unable to gather sufficient data for analysis. Please check API limits and try again.');
+    }
 
     console.log('✅ Research complete, sending to AI...');
 
@@ -539,12 +559,21 @@ Analyze and provide sales intelligence.`;
     console.error('❌ Analysis error:', error);
 
     if (error instanceof Error) {
+      // Tavily API usage limit
+      if (error.message.includes('usage limit') || error.message.includes('plan\'s set usage')) {
+        throw new Error('Search API usage limit reached. Please try again later or contact support to upgrade.');
+      }
+
       // User-friendly errors
       if (error.message.includes('API_KEY') ||
           error.message.includes('extract') ||
-          error.message.includes('content') ||
-          error.message.includes('AI')) {
+          error.message.includes('content')) {
         throw error;
+      }
+
+      // AI incomplete analysis - provide more context
+      if (error.message.includes('incomplete analysis')) {
+        throw new Error('Unable to generate complete analysis. This may be due to API limits or insufficient data. Please try again later.');
       }
 
       // API errors
