@@ -9,6 +9,15 @@ import { isSwedishCompany, searchSwedishCompanyData } from '@/lib/utils/swedishC
 import { extractWebsiteContent, performMultiSourceResearch } from '@/lib/services/searchService';
 import { analyzeCompanyWithGPT } from '@/lib/services/gptService';
 import analysisCache, { generateCacheKey } from '@/lib/cache/analysisCache';
+import logger from '@/lib/utils/logger';
+import {
+  ValidationError,
+  RateLimitError,
+  APIError,
+  AnalysisError,
+  ErrorCode,
+  getUserMessage,
+} from '@/lib/errors/AppError';
 import type { AnalysisResult, AdvancedSearchParams } from '@/lib/types/analysis';
 
 /**
@@ -31,34 +40,47 @@ export async function analyzeUrl(
   advancedParams?: AdvancedSearchParams,
   language: 'sv' | 'en' = 'en'
 ): Promise<AnalysisResult> {
+  const startTime = Date.now();
+
   try {
     // STEP 1: RATE LIMITING
     const headersList = await headers();
     const clientIP = getClientIP(headersList);
     const rateLimitResult = checkRateLimit(clientIP);
 
+    logger.rateLimitCheck(clientIP, rateLimitResult.remaining, rateLimitResult.allowed);
+
     if (!rateLimitResult.allowed) {
       const errorMessage = getRateLimitErrorMessage(rateLimitResult.retryAfter || 300, language);
-      console.log(`🚫 Rate limit exceeded for IP: ${clientIP} (retry after ${rateLimitResult.retryAfter}s)`);
-      throw new Error(errorMessage);
+      throw new RateLimitError(errorMessage, rateLimitResult.retryAfter || 300);
     }
-
-    console.log(`✅ Rate limit check passed for IP: ${clientIP} (${rateLimitResult.remaining} requests remaining)`);
 
     // STEP 2: VALIDATE API KEYS
     if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not configured. Please add it to your environment variables.');
+      throw new ValidationError(
+        'Service configuration error. Please contact support.',
+        'OPENAI_API_KEY is not configured',
+        { service: 'OpenAI' }
+      );
     }
 
     if (!process.env.TAVILY_API_KEY) {
-      throw new Error('TAVILY_API_KEY is not configured. Please add it to your environment variables.');
+      throw new ValidationError(
+        'Service configuration error. Please contact support.',
+        'TAVILY_API_KEY is not configured',
+        { service: 'Tavily' }
+      );
     }
 
     // STEP 3: NORMALIZE & SANITIZE INPUTS
     const url = normalizeUrl(inputUrl);
 
     if (!url) {
-      throw new Error('Please enter a valid URL.');
+      throw new ValidationError(
+        language === 'sv' ? 'Ange en giltig URL.' : 'Please enter a valid URL.',
+        'URL normalization failed',
+        { inputUrl }
+      );
     }
 
     // Sanitize advanced parameters to prevent prompt injection
@@ -69,11 +91,12 @@ export async function analyzeUrl(
     const cachedResult = analysisCache.get(cacheKey);
 
     if (cachedResult) {
-      console.log(`✅ Returning cached result for: ${url}`);
+      const duration = Date.now() - startTime;
+      logger.analysisComplete(url, duration, true);
       return cachedResult;
     }
 
-    console.log(`🔍 Cache miss, analyzing: ${url}`);
+    logger.cacheMiss(cacheKey);
 
     // STEP 5: INITIALIZE CLIENTS
     const openai = new OpenAI({
@@ -89,7 +112,7 @@ export async function analyzeUrl(
     const companyName = urlMatch ? urlMatch[1] : 'the company';
     const isSwedish = isSwedishCompany(url);
 
-    console.log(`🔍 Starting SMART research for: ${companyName} (${url}) ${isSwedish ? '🇸🇪' : ''}`);
+    logger.analysisStart(url, isSwedish, !!sanitizedParams);
 
     // STEP 6: EXTRACT WEBSITE CONTENT
     const websiteContent = await extractWebsiteContent(tavilyClient, url);
@@ -138,29 +161,70 @@ export async function analyzeUrl(
     const cacheTTL = parseInt(process.env.CACHE_TTL_MS || '3600000', 10);
     analysisCache.set(cacheKey, analysis, cacheTTL);
 
-    // Log cache stats
+    // Log cache stats and completion
     const stats = analysisCache.getStats();
-    console.log(`📊 Cache stats: ${stats.hits} hits, ${stats.misses} misses, ${stats.hitRate} hit rate, ${stats.size} entries`);
+    logger.cacheStats(stats.hits, stats.misses, stats.hitRate, stats.size);
+
+    const duration = Date.now() - startTime;
+    logger.analysisComplete(url, duration, false);
 
     return analysis;
   } catch (error) {
-    console.error('❌ Analysis error:', error);
+    // Log the error with details
+    logger.error('Analysis failed', error instanceof Error ? error : undefined, {
+      url: inputUrl,
+      language,
+      hasAdvancedParams: !!advancedParams,
+    });
 
+    // Re-throw AppErrors as-is (they have user-friendly messages)
+    if (error instanceof ValidationError || error instanceof RateLimitError) {
+      throw error;
+    }
+
+    // Handle known API errors
     if (error instanceof Error) {
       // Tavily API usage limit
       if (error.message.includes('usage limit') || error.message.includes("plan's set usage")) {
-        throw new Error('Search API usage limit reached. Please try again later or contact support to upgrade.');
+        throw new APIError(
+          'Tavily',
+          language === 'sv'
+            ? 'Sök-API gränsen nådd. Försök igen senare eller kontakta support.'
+            : 'Search API usage limit reached. Please try again later or contact support.',
+          error.message,
+          { originalError: error.message }
+        );
       }
 
-      // Rate limiting error (already has user-friendly message)
-      if (error.message.includes('många förfrågningar') || error.message.includes('Too many requests')) {
-        throw error;
+      // OpenAI API errors
+      if (error.message.includes('OpenAI') || error.message.includes('gpt')) {
+        throw new APIError(
+          'OpenAI',
+          language === 'sv'
+            ? 'AI-tjänsten är tillfälligt otillgänglig. Försök igen om en stund.'
+            : 'AI service temporarily unavailable. Please try again in a moment.',
+          error.message,
+          { originalError: error.message }
+        );
       }
 
-      // Pass through other errors
-      throw new Error(`Unable to generate complete analysis. ${error.message}`);
+      // Generic analysis error
+      throw new AnalysisError(
+        language === 'sv'
+          ? 'Kunde inte slutföra analysen. Försök igen eller kontakta support.'
+          : 'Unable to complete analysis. Please try again or contact support.',
+        error.message,
+        { originalError: error.message }
+      );
     }
 
-    throw new Error('Unable to generate complete analysis. This may be due to API limits or insufficient data. Please try again later.');
+    // Unknown error
+    throw new AnalysisError(
+      language === 'sv'
+        ? 'Ett oväntat fel inträffade. Försök igen senare.'
+        : 'An unexpected error occurred. Please try again later.',
+      'Unknown error during analysis',
+      { error: String(error) }
+    );
   }
 }
