@@ -2,6 +2,8 @@
 
 import OpenAI from 'openai';
 import { tavily } from '@tavily/core';
+import { headers } from 'next/headers';
+import { checkRateLimit, getClientIP, getRateLimitErrorMessage } from '@/lib/rateLimit';
 
 // Suppress Tavily's url.parse() deprecation warning from Tavily SDK
 if (typeof process !== 'undefined') {
@@ -280,6 +282,19 @@ export async function analyzeUrl(
   advancedParams?: AdvancedSearchParams,
   language: 'sv' | 'en' = 'en'
 ): Promise<AnalysisResult> {
+  // Rate limiting check
+  const headersList = await headers();
+  const clientIP = getClientIP(headersList);
+  const rateLimitResult = checkRateLimit(clientIP);
+
+  if (!rateLimitResult.allowed) {
+    const errorMessage = getRateLimitErrorMessage(rateLimitResult.retryAfter || 300, language);
+    console.log(`🚫 Rate limit exceeded for IP: ${clientIP} (retry after ${rateLimitResult.retryAfter}s)`);
+    throw new Error(errorMessage);
+  }
+
+  console.log(`✅ Rate limit check passed for IP: ${clientIP} (${rateLimitResult.remaining} requests remaining)`);
+
   // Validate API keys
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY is not configured. Please add it to your environment variables.');
@@ -522,6 +537,16 @@ You are an elite B2B sales intelligence analyst. Your mission: Extract CONCISE, 
   * If you only find 1-2 entries with [SOURCE: ...] tags, only generate 1-2 ice breakers (better quality over quantity)
   * Never create an ice breaker about a fact if you cannot find its [SOURCE: ...] tag
 
+- PERSONAL SITES / PORTFOLIOS / CONSULTANTS (SPECIAL HANDLING):
+  * If website is a personal portfolio/consultant site (not a company), you MUST still generate at least 1 ice breaker
+  * Look for: LinkedIn profile links on the website, LinkedIn posts in research, projects/case studies mentioned
+  * Example ice breakers for personal sites:
+    - "Såg din LinkedIn-profil och imponerades av ditt arbete med [skill/technology]" (use LinkedIn profile URL as source)
+    - "Intressant projekt med [project name] som du visar på din sida" (use website URL as source)
+    - "Din erfarenhet med [expertise area] verkar imponerande baserat på din portfolio" (use website URL as source)
+  * At MINIMUM generate 1 ice breaker - use website URL as source_url if no specific LinkedIn posts found
+  * Better to have 1 generic ice breaker than an empty array
+
 GOOD EXAMPLES:
 ✅ "Caught Nemanja's post on balancing speed vs. learning—how's that playing out in real sprints?"
 ✅ "Saw the Dec HQ session in Gothenburg—curious how you measure impact beyond code output?"
@@ -659,7 +684,24 @@ Analyze and provide sales intelligence.`;
     if (!analysis.summary) validationErrors.push('summary');
     if (!analysis.ice_breaker) validationErrors.push('ice_breaker');
     if (analysis.ice_breaker && !Array.isArray(analysis.ice_breaker)) validationErrors.push('ice_breaker not array');
-    if (analysis.ice_breaker && Array.isArray(analysis.ice_breaker) && analysis.ice_breaker.length === 0) validationErrors.push('ice_breaker empty');
+
+    // Handle empty ice_breaker array with intelligent fallback (for personal sites/portfolios)
+    if (analysis.ice_breaker && Array.isArray(analysis.ice_breaker) && analysis.ice_breaker.length === 0) {
+      console.log('⚠️ Empty ice_breaker array detected, generating fallback...');
+
+      // Generate intelligent fallback based on summary or content
+      const fallbackText = language === 'sv'
+        ? `Imponerad av din profil och erfarenhet`
+        : `Impressed by your profile and experience`;
+
+      analysis.ice_breaker = [{
+        text: fallbackText,
+        source_url: url
+      }];
+
+      console.log('✅ Generated fallback ice breaker for personal site/portfolio');
+    }
+
     if (!analysis.pain_points) validationErrors.push('pain_points');
     if (!analysis.sales_hooks) validationErrors.push('sales_hooks');
     if (!analysis.financial_signals) validationErrors.push('financial_signals');

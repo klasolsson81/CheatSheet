@@ -245,6 +245,33 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
+**Commit: `[PENDING]` - feat: add personal site support, rate limiting, and TODO backlog**
+- **PERSONAL SITE SUPPORT:**
+  - Fixed error when analyzing personal portfolios/consultant sites (e.g., klasolsson.se)
+  - Added special handling in GPT prompt for personal sites vs companies
+  - Improved validation with intelligent fallback for empty ice_breaker arrays
+  - Fallback generates contextual ice breaker based on profile/expertise
+  - Language-aware fallback messages (Swedish/English)
+- **RATE LIMITING:**
+  - Implemented in-memory rate limiter to prevent API abuse
+  - Configuration: 10 requests per 5 minutes per IP (configurable via env vars)
+  - Extracts client IP from headers (Vercel, Cloudflare, etc.)
+  - User-friendly error messages with retry-after time
+  - Automatic cleanup of expired entries to prevent memory leaks
+- **DOCUMENTATION:**
+  - Added comprehensive TODO/BACKLOG section to CLAUDE.md
+  - Organized tasks by priority: Critical, High, Medium, Nice to Have
+  - Included problem descriptions, solutions, and references to CODE_REVIEW.md
+  - Total: 1 Critical, 4 High, 5 Medium, 8 Nice to Have items
+- **FILES CHANGED:**
+  - `app/actions.ts`: Added personal site prompt instructions, fallback validation, rate limiting integration
+  - `lib/rateLimit.ts`: New file with rate limiting logic
+  - `claude.md`: Added TODO/BACKLOG section
+- **IMPACT:**
+  - Personal sites now work correctly (no more "incomplete analysis" errors)
+  - API abuse prevention with rate limiting
+  - Better project organization with documented backlog
+
 **Commit: `c044400` - feat: implement critical security and SEO fixes from code review**
 - **SECURITY IMPROVEMENTS:**
   - Added comprehensive input sanitization to prevent XSS and prompt injection attacks
@@ -552,6 +579,111 @@ git add .
 git commit -m "message"
 git push
 ```
+
+---
+
+## 📋 TODO / BACKLOG
+
+### 🔴 Critical (Måste göras)
+
+- [ ] **Rate Limiting** - Implementera rate limiting för API-anrop
+  - **Problem:** Inga begränsningar på antal API-anrop per användare/IP
+  - **Risk:** Missbruk, överdriven API-kostnad, DoS-sårbarhet
+  - **Lösning:** Implementera rate limiting (Vercel Edge Config, Redis, eller in-memory för start)
+  - **Ref:** CODE_REVIEW.md #3
+
+### 🟡 High Priority (Bör göras snart)
+
+- [ ] **Refactor actions.ts** - Bryt upp 598 rader till mindre moduler
+  - **Problem:** En fil hanterar allt (validation, search, GPT, Swedish company logic)
+  - **Bryter mot:** Single Responsibility Principle (SRP)
+  - **Förslag:**
+    ```
+    /lib/validators/urlValidator.ts
+    /lib/services/searchService.ts
+    /lib/services/gptService.ts
+    /lib/utils/swedishCompany.ts
+    /lib/types/analysis.ts
+    ```
+  - **Ref:** CODE_REVIEW.md #5
+
+- [ ] **Type Guards** - Lägg till runtime type validation
+  - **Problem:** JSON parsing utan runtime validation (endast TypeScript types)
+  - **Risk:** Runtime errors om API returnerar oväntat format
+  - **Lösning:** Använd Zod eller io-ts för JSON schema validation
+  - **Ref:** CODE_REVIEW.md #7
+
+- [ ] **Process Manipulation** - Ta bort process.emitWarning override
+  - **Problem:** Global override av `process.emitWarning` (säkerhetsrisk)
+  - **Nuvarande:** Används för att suppresa Tavily SDK deprecation warning
+  - **Lösning:** Hitta bättre sätt (Tavily SDK config, eller acceptera warning)
+  - **Ref:** CODE_REVIEW.md #8
+
+### 🟢 Medium Priority (Kan vänta)
+
+- [ ] **Testing** - Lägg till test coverage (0% just nu)
+  - **Unit tests:** Utility functions (sanitizeUrl, normalizeUrl, etc.)
+  - **Integration tests:** API calls, GPT responses
+  - **E2E tests:** User flows med Playwright
+  - **Setup:** Jest/Vitest configuration
+  - **Impact:** Safer refactoring, fewer regressions
+  - **Ref:** CODE_REVIEW.md #9
+
+- [ ] **Caching** - Implementera caching för API-svar
+  - **Problem:** Varje request gör fresh API calls (även för samma URL)
+  - **Impact:** Onödiga kostnader, långsam responstid för upprepade queries
+  - **Lösning:**
+    - Redis för production
+    - In-memory cache för development
+    - Cache key: `URL + advancedParams hash`
+    - TTL: 1h för companies, 24h för financials
+  - **Förväntat resultat:** 80% mindre API-kostnader, snabbare UX
+  - **Ref:** CODE_REVIEW.md #11
+
+- [ ] **Accessibility** - Lägg till ARIA labels
+  - **Problem:** Interactive elements saknar aria-labels
+  - **Examples:**
+    - Advanced toggle button (line 266-273 in page.tsx)
+    - Language switcher buttons
+  - **Lösning:** Lägg till aria-label, aria-expanded, role attribut
+  - **Standard:** WCAG AA compliance
+  - **Ref:** CODE_REVIEW.md #10
+
+- [ ] **Error Handling** - Bättre error types och logging
+  - **Problem:** Generiska error messages, ingen structured logging
+  - **Lösning:**
+    - Custom `AppError` class med error codes
+    - Structured logging (console.log → logger.info/error)
+    - User-friendly vs developer error messages
+    - Error codes: `ANALYSIS_FAILED`, `API_LIMIT`, `INVALID_INPUT`
+  - **Ref:** CODE_REVIEW.md #12
+
+- [ ] **Magic Numbers** - Extrahera till named constants
+  - **Problem:** Hard-coded values utan dokumentation
+  - **Examples:**
+    ```typescript
+    maxResults: 5  // Why 5?
+    maxIterations: 5  // Why 5?
+    MAX_URL_LENGTH: 500  // Why 500?
+    ```
+  - **Lösning:**
+    ```typescript
+    const MAX_SOCIAL_MEDIA_RESULTS = 5; // Balance between quality and speed
+    const MAX_GPT_SEARCH_ITERATIONS = 5; // Optimal for Swedish company search
+    const MAX_URL_LENGTH = 500; // Prevent abuse and DoS
+    ```
+  - **Ref:** CODE_REVIEW.md #13
+
+### 💡 Nice to Have (Framtida förbättringar)
+
+- [ ] **Copy-to-clipboard** - Buttons för att kopiera ice breakers
+- [ ] **Export Results** - Export analysis som PDF eller Markdown
+- [ ] **Search History** - Spara tidigare sökningar (localStorage eller DB)
+- [ ] **User Accounts** - Authentication och saved searches
+- [ ] **Real-time Notifications** - Alerts när companies får ny press/funding
+- [ ] **Chrome Extension** - Analyze company direkt från LinkedIn/hemsida
+- [ ] **Multi-language** - Support för fler språk (Norska, Danska, Finska)
+- [ ] **API Endpoint** - REST API för integration med CRM-system
 
 ---
 
