@@ -253,7 +253,7 @@ SERPAPI_API_KEY=...          # SerpAPI key (250 FREE/month)
 
 ### 2025-12-16 (Current Session)
 
-**Commit: `PENDING` - feat: add domain validation to prevent hallucinated results**
+**Commit: `2499008` - feat: add domain validation and silence deprecation warnings**
 - **CRITICAL FIX:** Domain validation prevents analyzing non-existent domains
 - **PROBLEM:** User entered `klasolsson81.se` (non-existent) → System hallucinated results about "Clas Ohlson" company
 - **SOLUTION:** Added DNS + HTTP validation before starting searches
