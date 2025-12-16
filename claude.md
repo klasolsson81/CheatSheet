@@ -245,7 +245,22 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
-**Commit: (pending) - test: add comprehensive unit test coverage with Vitest**
+**Commit: (pending) - fix: add manifest.json and resolve 404 errors**
+- **BUG FIXES:**
+  - Created `/public/manifest.json` for PWA support (was referenced but missing)
+  - Temporarily commented out icon references in `layout.tsx` to prevent 404 errors
+  - Icons (favicon.ico, icon-192.png, icon-512.png, apple-icon.png) need to be added later
+- **VERCEL ANALYTICS NOTE:**
+  - Analytics component correctly configured in `layout.tsx`
+  - Analytics script (`/_vercel/insights/script.js`) only loads in production after deployment
+  - Error in development mode is expected - will resolve after next deploy to Vercel
+- **FILES CHANGED:**
+  - `public/manifest.json` - Created PWA manifest with theme colors, icons config
+  - `app/layout.tsx` - Commented out icon references temporarily (TODO added)
+- **TESTING:** ✅ Build successful, no errors
+- **IMPACT:** Eliminates console 404 errors for manifest.json
+
+**Commit: `225e9bd` - test: add comprehensive unit test coverage with Vitest**
 - **TESTING IMPLEMENTATION (CODE_REVIEW.md #9):**
   - Installed and configured Vitest as testing framework
   - Installed React Testing Library, jsdom, and @testing-library/jest-dom

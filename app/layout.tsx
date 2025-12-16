@@ -79,16 +79,17 @@ export const metadata: Metadata = {
     images: [ogImageUrl],
     creator: "@klasolsson", // Update with actual Twitter handle
   },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [
-      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
-    ],
-  },
+  // TODO: Add icon files to /public directory to enable PWA icons
+  // icons: {
+  //   icon: [
+  //     { url: "/favicon.ico", sizes: "any" },
+  //     { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+  //     { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+  //   ],
+  //   apple: [
+  //     { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+  //   ],
+  // },
   manifest: "/manifest.json",
   category: "technology",
   alternates: {
