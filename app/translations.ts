@@ -8,8 +8,8 @@ export const translations = {
 
     // Input Form
     inputPlaceholder: 'MÅL-URL',
-    executeButton: 'UTFÖR',
-    analyzingButton: 'ANALYSERAR...',
+    executeButton: 'SÖK',
+    analyzingButton: 'SÖKER...',
     advancedToggle: 'Avancerad Målsökning',
 
     // Advanced Search
@@ -60,8 +60,8 @@ export const translations = {
 
     // Input Form
     inputPlaceholder: 'TARGET URL',
-    executeButton: 'EXECUTE',
-    analyzingButton: 'ANALYZING...',
+    executeButton: 'SEARCH',
+    analyzingButton: 'SEARCHING...',
     advancedToggle: 'Advanced Targeting',
 
     // Advanced Search

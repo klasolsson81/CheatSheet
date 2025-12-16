@@ -225,7 +225,7 @@ export default function Home() {
               {t.title}
             </h1>
           </div>
-          <p className="text-slate-400 text-xs sm:text-sm font-mono tracking-wide uppercase px-4">
+          <p className="text-slate-200 text-xs sm:text-sm font-mono tracking-wide uppercase px-4">
             {t.subtitle}
           </p>
         </motion.div>
@@ -242,13 +242,13 @@ export default function Home() {
             {/* Tactical Input Container */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-black/60 backdrop-blur-sm rounded-lg border border-slate-800 overflow-hidden focus-within:border-emerald-500 transition-all duration-200 shadow-lg">
               <div className="flex items-center flex-1">
-                <Search className="ml-4 sm:ml-5 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 flex-shrink-0" />
+                <Search className="ml-4 sm:ml-5 w-4 h-4 sm:w-5 sm:h-5 text-slate-400 flex-shrink-0" />
                 <input
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder={t.inputPlaceholder}
-                  className="flex-1 bg-transparent px-3 sm:px-4 py-4 text-sm sm:text-base text-white placeholder-slate-600 outline-none font-mono tracking-wide"
+                  className="flex-1 bg-transparent px-3 sm:px-4 py-4 text-sm sm:text-base text-white placeholder-slate-400 outline-none font-mono tracking-wide"
                   disabled={loading}
                 />
               </div>
@@ -266,7 +266,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-500 hover:text-white transition-colors cursor-pointer font-mono tracking-wider uppercase"
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-300 hover:text-white transition-colors cursor-pointer font-mono tracking-wider uppercase"
               >
                 <span className="text-sm font-bold">{showAdvanced ? '[−]' : '[+]'}</span>
                 <span>{t.advancedToggle}</span>
@@ -284,14 +284,14 @@ export default function Home() {
                   className="relative z-10 mt-6 overflow-hidden"
                 >
                   <div className="bg-black/60 backdrop-blur-sm border border-slate-800 rounded-lg p-4 sm:p-6 space-y-4">
-                    <p className="text-xs text-slate-500 mb-4 font-mono tracking-wide uppercase leading-relaxed">
+                    <p className="text-xs text-slate-300 mb-4 font-mono tracking-wide uppercase leading-relaxed">
                       {t.advancedDescription}
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {/* Contact Person */}
                       <div>
-                        <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
+                        <label className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
                           {t.contactPersonLabel}
                         </label>
                         <input
@@ -299,14 +299,14 @@ export default function Home() {
                           value={contactPerson}
                           onChange={(e) => setContactPerson(e.target.value)}
                           placeholder={t.contactPersonPlaceholder}
-                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-emerald-500 transition-all font-mono"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
 
                       {/* Job Title */}
                       <div>
-                        <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
+                        <label className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
                           {t.jobTitleLabel}
                         </label>
                         <input
@@ -314,14 +314,14 @@ export default function Home() {
                           value={jobTitle}
                           onChange={(e) => setJobTitle(e.target.value)}
                           placeholder={t.jobTitlePlaceholder}
-                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-emerald-500 transition-all font-mono"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
 
                       {/* Department */}
                       <div>
-                        <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
+                        <label className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
                           {t.departmentLabel}
                         </label>
                         <input
@@ -329,14 +329,14 @@ export default function Home() {
                           value={department}
                           onChange={(e) => setDepartment(e.target.value)}
                           placeholder={t.departmentPlaceholder}
-                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-emerald-500 transition-all font-mono"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
 
                       {/* Location */}
                       <div>
-                        <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
+                        <label className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
                           {t.locationLabel}
                         </label>
                         <input
@@ -344,14 +344,14 @@ export default function Home() {
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
                           placeholder={t.locationPlaceholder}
-                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-emerald-500 transition-all font-mono"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
 
                       {/* Specific Focus */}
                       <div className="sm:col-span-2">
-                        <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
+                        <label className="block text-xs font-mono text-slate-200 mb-2 tracking-wider uppercase">
                           {t.specificFocusLabel}
                         </label>
                         <input
@@ -359,7 +359,7 @@ export default function Home() {
                           value={specificFocus}
                           onChange={(e) => setSpecificFocus(e.target.value)}
                           placeholder={t.specificFocusPlaceholder}
-                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-emerald-500 transition-all font-mono"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-400 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
@@ -386,7 +386,7 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="text-sm text-slate-400 font-mono tracking-wider uppercase"
+                className="text-sm text-slate-200 font-mono tracking-wider uppercase"
               >
                 {loadingMessage}
               </motion.p>
@@ -542,7 +542,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="mt-12 sm:mt-16 lg:mt-20 pt-6 sm:pt-8 border-t border-slate-800">
-          <p className="text-center text-xs text-slate-500 font-mono tracking-wider uppercase px-4">
+          <p className="text-center text-xs text-slate-300 font-mono tracking-wider uppercase px-4">
             {t.footerStatus}
           </p>
         </footer>

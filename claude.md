@@ -245,6 +245,26 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
+**Commit: TBD - improve: enhanced text contrast and button text clarity**
+- Improved text contrast across all UI elements for better readability (especially for users with vision impairments)
+- Updated all text colors from dark slate to lighter shades:
+  - Subtitle: `text-slate-400` → `text-slate-200`
+  - Labels: `text-slate-400` → `text-slate-200`
+  - Placeholders: `placeholder-slate-600` → `placeholder-slate-400`
+  - Description text: `text-slate-500` → `text-slate-300`
+  - Toggle buttons: `text-slate-500` → `text-slate-300`
+  - Loading messages: `text-slate-400` → `text-slate-200`
+  - Footer: `text-slate-500` → `text-slate-300`
+  - Search icon: `text-slate-500` → `text-slate-400`
+- Changed button text for better UX:
+  - Swedish: "UTFÖR" → "SÖK" (Execute → Search)
+  - Swedish: "ANALYSERAR..." → "SÖKER..." (Analyzing → Searching)
+  - English: "EXECUTE" → "SEARCH"
+  - English: "ANALYZING..." → "SEARCHING..."
+- All text now has better contrast against dark blue background
+- **Files modified:** `app/translations.ts`, `app/page.tsx`
+- **Impact:** Significantly improved readability and accessibility
+
 **Commit: `7e16ef7` - feat: comprehensive responsive design overhaul**
 - Fixed background color inconsistency across devices (white on mobile, black on laptop, dark blue on desktop)
 - Implemented consistent dark blue tech background globally via `body` element in `globals.css`
