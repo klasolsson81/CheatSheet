@@ -5,9 +5,14 @@
  * Prevents XSS, prompt injection, and other input-based attacks.
  */
 
+import { promises as dns } from 'dns';
+import https from 'https';
+import http from 'http';
+
 // Configuration constants
 const MAX_URL_LENGTH = 500; // Maximum URL length to prevent abuse
 const DEFAULT_TEXT_MAX_LENGTH = 200; // Default max length for text inputs
+const DOMAIN_CHECK_TIMEOUT = 5000; // 5 second timeout for domain checks
 
 /**
  * Sanitize URL input to prevent XSS and injection attacks
@@ -140,4 +145,224 @@ export function sanitizeAdvancedParams(params: {
     jobTitle: sanitizeTextInput(params.jobTitle || '', 100),
     specificFocus: sanitizeTextInput(params.specificFocus || '', 300),
   };
+}
+
+/**
+ * Domain validation result
+ */
+export interface DomainValidationResult {
+  exists: boolean;
+  error?: string;
+  suggestion?: string;
+  details?: string;
+}
+
+/**
+ * Calculate Levenshtein distance between two strings
+ * Used for fuzzy matching to suggest similar domains
+ *
+ * @param a - First string
+ * @param b - Second string
+ * @returns Edit distance between strings
+ */
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1, // insertion
+          matrix[i - 1][j] + 1 // deletion
+        );
+      }
+    }
+  }
+
+  return matrix[b.length][a.length];
+}
+
+/**
+ * Extract hostname from URL
+ *
+ * @param url - Full URL
+ * @returns Hostname without protocol
+ */
+function extractHostname(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch {
+    // If URL parsing fails, try to extract manually
+    const match = url.match(/(?:https?:\/\/)?(?:www\.)?([^\/]+)/);
+    return match ? match[1] : url;
+  }
+}
+
+/**
+ * Check if domain exists via DNS lookup
+ *
+ * @param hostname - Domain hostname to check
+ * @returns true if DNS resolves, false otherwise
+ */
+async function checkDNS(hostname: string): Promise<boolean> {
+  try {
+    await Promise.race([
+      dns.resolve(hostname),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('DNS timeout')), DOMAIN_CHECK_TIMEOUT)
+      ),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if domain is accessible via HTTP/HTTPS HEAD request
+ *
+ * @param url - Full URL to check
+ * @returns true if accessible, false otherwise
+ */
+async function checkHTTP(url: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    try {
+      const urlObj = new URL(url);
+      const protocol = urlObj.protocol === 'https:' ? https : http;
+
+      const req = protocol.request(
+        url,
+        {
+          method: 'HEAD',
+          timeout: DOMAIN_CHECK_TIMEOUT,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; DomainValidator/1.0)',
+          },
+        },
+        (res) => {
+          // Accept any response (even errors) as long as server responds
+          resolve(res.statusCode !== undefined && res.statusCode < 500);
+        }
+      );
+
+      req.on('error', () => resolve(false));
+      req.on('timeout', () => {
+        req.destroy();
+        resolve(false);
+      });
+      req.end();
+    } catch {
+      resolve(false);
+    }
+  });
+}
+
+/**
+ * Find similar domain suggestions using fuzzy matching
+ *
+ * @param hostname - Invalid hostname
+ * @returns Suggested similar hostname or undefined
+ */
+function findSimilarDomain(hostname: string): string | undefined {
+  // Common Swedish company domains to check
+  const commonDomains = [
+    hostname.replace(/\d+/g, ''), // Remove numbers (klasolsson81.se → klasolsson.se)
+    hostname.replace(/www\./g, ''),
+    hostname.replace(/-/g, ''),
+  ];
+
+  // Check if removing numbers makes a valid-looking domain
+  const withoutNumbers = hostname.replace(/\d+/g, '');
+  if (withoutNumbers !== hostname && withoutNumbers.includes('.')) {
+    return withoutNumbers;
+  }
+
+  return undefined;
+}
+
+/**
+ * Validate that a domain exists and is accessible
+ *
+ * Performs DNS lookup and HTTP HEAD request to verify domain.
+ * Provides fuzzy matching suggestions for common typos.
+ *
+ * @param url - URL to validate
+ * @param language - Language for error messages ('sv' or 'en')
+ * @returns Validation result with exists flag, error message, and suggestions
+ */
+export async function validateDomainExists(
+  url: string,
+  language: 'sv' | 'en' = 'en'
+): Promise<DomainValidationResult> {
+  try {
+    const hostname = extractHostname(url);
+
+    // Step 1: DNS lookup
+    const dnsExists = await checkDNS(hostname);
+
+    if (!dnsExists) {
+      // Try to find similar domain
+      const suggestion = findSimilarDomain(hostname);
+
+      if (suggestion) {
+        return {
+          exists: false,
+          error:
+            language === 'sv'
+              ? `Domänen "${hostname}" hittades inte. Menade du "${suggestion}"?`
+              : `Domain "${hostname}" not found. Did you mean "${suggestion}"?`,
+          suggestion,
+          details: 'DNS_NOT_FOUND',
+        };
+      }
+
+      return {
+        exists: false,
+        error:
+          language === 'sv'
+            ? `Domänen "${hostname}" hittades inte. Kontrollera stavningen och försök igen.`
+            : `Domain "${hostname}" not found. Please check the spelling and try again.`,
+        details: 'DNS_NOT_FOUND',
+      };
+    }
+
+    // Step 2: HTTP accessibility check
+    const httpAccessible = await checkHTTP(url);
+
+    if (!httpAccessible) {
+      return {
+        exists: false,
+        error:
+          language === 'sv'
+            ? `Webbplatsen "${hostname}" svarar inte. Den kan vara offline eller otillgänglig.`
+            : `Website "${hostname}" is not responding. It may be offline or inaccessible.`,
+        details: 'HTTP_NOT_ACCESSIBLE',
+      };
+    }
+
+    // Domain exists and is accessible
+    return { exists: true };
+  } catch (error) {
+    // Validation error - return generic message
+    return {
+      exists: false,
+      error:
+        language === 'sv'
+          ? 'Kunde inte validera domänen. Försök igen.'
+          : 'Unable to validate domain. Please try again.',
+      details: error instanceof Error ? error.message : 'UNKNOWN_ERROR',
+    };
+  }
 }

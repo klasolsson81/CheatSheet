@@ -15,7 +15,7 @@ RECON is an AI-powered B2B sales intelligence tool that analyzes companies in re
 - **UI/Animations:** Framer Motion
 - **Icons:** Lucide React
 - **AI:** OpenAI GPT-5.2
-- **Search:** Tavily API (advanced web search + content extraction)
+- **Search:** Multi-provider with automatic fallback (Tavily, Serper.dev, Brave, SerpAPI)
 - **Deployment:** Vercel
 - **Font:** Atkinson Hyperlegible (sans-serif, optimized for readability), Geist Mono (monospace)
 
@@ -96,6 +96,8 @@ Generated insights include:
 6. **Company Tone** - 2-4 word brand voice description
 
 ### 6. **Safety Features**
+- **Domain validation** - DNS + HTTP checks to prevent analyzing non-existent domains
+- **Typo correction** - Fuzzy matching suggests correct domains (e.g., `klasolsson81.se` → `klasolsson.se`)
 - NSFW content detection (blocks adult/gambling/hate speech)
 - Grounding checks (prevents hallucinations about similar brands)
 - API key validation
@@ -218,8 +220,14 @@ claude.md              # This file (project documentation)
 ### Required Environment Variables
 
 ```bash
+# Required
 OPENAI_API_KEY=sk-...        # OpenAI API key (GPT-5.2)
-TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
+TAVILY_API_KEY=tvly-...      # Tavily API key (primary search provider)
+
+# Optional (for fallback providers)
+SERPER_API_KEY=...           # Serper.dev API key (2,500 FREE/month)
+BRAVE_API_KEY=...            # Brave Search API key (2,000 FREE/month)
+SERPAPI_API_KEY=...          # SerpAPI key (250 FREE/month)
 ```
 
 ### Research Data Sources (6 Streams)
@@ -244,6 +252,33 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 ## Recent Changes
 
 ### 2025-12-16 (Current Session)
+
+**Commit: `PENDING` - feat: add domain validation to prevent hallucinated results**
+- **CRITICAL FIX:** Domain validation prevents analyzing non-existent domains
+- **PROBLEM:** User entered `klasolsson81.se` (non-existent) → System hallucinated results about "Clas Ohlson" company
+- **SOLUTION:** Added DNS + HTTP validation before starting searches
+- **NEW VALIDATION FUNCTION:** `validateDomainExists()` in `lib/validators/urlValidator.ts`
+  - Step 1: DNS lookup to verify domain resolves
+  - Step 2: HTTP HEAD request to verify website accessibility
+  - Step 3: Fuzzy matching to suggest corrections (e.g., `klasolsson81.se` → `klasolsson.se`)
+  - Bilingual error messages (Swedish/English)
+  - 5-second timeout for quick validation
+- **INTEGRATION:** Added as "STEP 3.5" in `app/actions.ts` after URL normalization
+- **ERROR HANDLING:** Throws `ValidationError` with helpful suggestions
+- **USER EXPERIENCE:**
+  - If domain doesn't exist: Shows error with suggestion
+  - If domain exists but offline: Specific error message
+  - Clear, actionable feedback in user's selected language
+- **TECHNICAL DETAILS:**
+  - Uses Node.js `dns.promises` for DNS resolution
+  - Uses `http`/`https` modules for HEAD requests
+  - Levenshtein distance algorithm for fuzzy matching
+  - Removes numbers from domain for common typo correction
+- **DEPRECATION WARNING FIX:** Silenced `url.parse()` deprecation warning from dependencies
+  - Added warning filter in production mode
+  - Filters out DEP0169 warnings from Tavily SDK
+  - Preserves other important warnings
+- **TESTING:** ✅ Build successful, no TypeScript errors
 
 **Commit: `a0e9550` - feat: add multi-provider search with automatic fallback**
 - **SEARCH PROVIDER ARCHITECTURE:**

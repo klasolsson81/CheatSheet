@@ -1,9 +1,22 @@
 'use server';
 
+// Silence specific deprecation warning from dependencies (url.parse)
+if (process.env.NODE_ENV === 'production') {
+  const originalEmitWarning = process.emitWarning;
+  process.emitWarning = ((warning: any, ...args: any[]) => {
+    // Filter out url.parse deprecation warnings from dependencies
+    const warningStr = typeof warning === 'string' ? warning : warning?.message || '';
+    if (warningStr.includes('url.parse()') || warningStr.includes('DEP0169')) {
+      return;
+    }
+    return originalEmitWarning.call(process, warning, ...args);
+  }) as typeof process.emitWarning;
+}
+
 import OpenAI from 'openai';
 import { headers } from 'next/headers';
 import { checkRateLimit, getClientIP, getRateLimitErrorMessage } from '@/lib/rateLimit';
-import { normalizeUrl, sanitizeAdvancedParams } from '@/lib/validators/urlValidator';
+import { normalizeUrl, sanitizeAdvancedParams, validateDomainExists } from '@/lib/validators/urlValidator';
 import { isSwedishCompany, searchSwedishCompanyData } from '@/lib/utils/swedishCompany';
 import { extractWebsiteContent, performMultiSourceResearch } from '@/lib/services/searchService';
 import { analyzeCompanyWithGPT } from '@/lib/services/gptService';
@@ -84,6 +97,24 @@ export async function analyzeUrl(
 
     // Sanitize advanced parameters to prevent prompt injection
     const sanitizedParams = advancedParams ? sanitizeAdvancedParams(advancedParams) : undefined;
+
+    // STEP 3.5: VALIDATE DOMAIN EXISTS
+    const domainValidation = await validateDomainExists(url, language);
+
+    if (!domainValidation.exists) {
+      throw new ValidationError(
+        domainValidation.error || (language === 'sv' ? 'Domänen hittades inte.' : 'Domain not found.'),
+        'Domain validation failed',
+        {
+          inputUrl,
+          normalizedUrl: url,
+          validationDetails: domainValidation.details,
+          suggestion: domainValidation.suggestion,
+        }
+      );
+    }
+
+    logger.info('Domain validation passed', { url });
 
     // STEP 4: CHECK CACHE
     const cacheKey = generateCacheKey(url, sanitizedParams, language);
