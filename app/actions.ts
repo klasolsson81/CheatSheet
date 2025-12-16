@@ -3,6 +3,17 @@
 import OpenAI from 'openai';
 import { tavily } from '@tavily/core';
 
+// Suppress Tavily's url.parse() deprecation warning from Tavily SDK
+if (typeof process !== 'undefined') {
+  const originalEmitWarning = process.emitWarning.bind(process);
+  process.emitWarning = (warning: string | Error, type?: any, code?: any, ctor?: any) => {
+    if (typeof warning === 'string' && warning.includes('url.parse()')) {
+      return; // Suppress url.parse() deprecation from Tavily SDK
+    }
+    return originalEmitWarning(warning, type, code, ctor);
+  };
+}
+
 interface IceBreaker {
   text: string;
   source_url?: string;
