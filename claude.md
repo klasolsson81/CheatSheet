@@ -245,7 +245,40 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
-**Commit: (pending) - feat: add in-memory LRU cache for analysis results**
+**Commit: `2449cd3` - feat: add structured error handling and logging**
+- **ERROR HANDLING IMPROVEMENTS (CODE_REVIEW.md #12):**
+  - Implemented custom error classes with error codes for structured error handling
+  - Created comprehensive logging utility with different log levels
+  - Separated user-friendly messages from developer debug information
+- **CUSTOM ERROR CLASSES:**
+  - `AppError` - Base error class with code, statusCode, userMessage, developerMessage
+  - `ValidationError` - Input validation errors (400)
+  - `RateLimitError` - Rate limit exceeded (429)
+  - `APIError` - External API errors (OpenAI, Tavily) (502)
+  - `AnalysisError` - Analysis processing errors (500)
+  - Error codes: INVALID_URL, API_LIMIT_EXCEEDED, RATE_LIMIT_EXCEEDED, etc.
+- **STRUCTURED LOGGING:**
+  - `lib/utils/logger.ts` - Logger with debug, info, warn, error levels
+  - Convenience methods: analysisStart, analysisComplete, cacheHit, rateLimitCheck, apiCall
+  - Development mode: Pretty console output with emojis
+  - Production mode: Structured JSON logging
+  - Contextual information included in all logs
+- **INTEGRATION:**
+  - Updated `app/actions.ts` with comprehensive error handling
+  - All console.log replaced with structured logger calls
+  - User-friendly error messages in both Swedish and English
+  - Detailed developer errors with context for debugging
+  - Error tracking with timestamps and stack traces
+- **BENEFITS:**
+  - ✅ Clear separation of user vs developer errors
+  - ✅ Structured, searchable logs (JSON in production)
+  - ✅ Consistent error codes for error tracking
+  - ✅ Better debugging with contextual information
+  - ✅ Bilingual error messages (SV/EN)
+- **TESTING:** ✅ Build successful, no errors
+- **IMPACT:** Significantly improved error visibility and debugging capability
+
+**Commit: `2cef1ba` - feat: add in-memory LRU cache for analysis results**
 - **CACHING IMPLEMENTATION (CODE_REVIEW.md #11):**
   - Implemented in-memory LRU (Least Recently Used) cache with TTL support
   - Reduces API costs by caching analysis results for repeated queries
