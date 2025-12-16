@@ -8,6 +8,7 @@ import { normalizeUrl, sanitizeAdvancedParams } from '@/lib/validators/urlValida
 import { isSwedishCompany, searchSwedishCompanyData } from '@/lib/utils/swedishCompany';
 import { extractWebsiteContent, performMultiSourceResearch } from '@/lib/services/searchService';
 import { analyzeCompanyWithGPT } from '@/lib/services/gptService';
+import analysisCache, { generateCacheKey } from '@/lib/cache/analysisCache';
 import type { AnalysisResult, AdvancedSearchParams } from '@/lib/types/analysis';
 
 /**
@@ -63,7 +64,18 @@ export async function analyzeUrl(
     // Sanitize advanced parameters to prevent prompt injection
     const sanitizedParams = advancedParams ? sanitizeAdvancedParams(advancedParams) : undefined;
 
-    // STEP 4: INITIALIZE CLIENTS
+    // STEP 4: CHECK CACHE
+    const cacheKey = generateCacheKey(url, sanitizedParams, language);
+    const cachedResult = analysisCache.get(cacheKey);
+
+    if (cachedResult) {
+      console.log(`✅ Returning cached result for: ${url}`);
+      return cachedResult;
+    }
+
+    console.log(`🔍 Cache miss, analyzing: ${url}`);
+
+    // STEP 5: INITIALIZE CLIENTS
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -79,10 +91,10 @@ export async function analyzeUrl(
 
     console.log(`🔍 Starting SMART research for: ${companyName} (${url}) ${isSwedish ? '🇸🇪' : ''}`);
 
-    // STEP 5: EXTRACT WEBSITE CONTENT
+    // STEP 6: EXTRACT WEBSITE CONTENT
     const websiteContent = await extractWebsiteContent(tavilyClient, url);
 
-    // STEP 6: SWEDISH COMPANY SPECIAL HANDLING
+    // STEP 7: SWEDISH COMPANY SPECIAL HANDLING
     // If Swedish company, use GPT-driven search for org number + financials
     let orgNumber = '';
     let gptFinancialData = '';
@@ -98,7 +110,7 @@ export async function analyzeUrl(
       }
     }
 
-    // STEP 7: MULTI-SOURCE PARALLEL RESEARCH
+    // STEP 8: MULTI-SOURCE PARALLEL RESEARCH
     const research = await performMultiSourceResearch(
       tavilyClient,
       companyName,
@@ -120,6 +132,15 @@ export async function analyzeUrl(
       language,
       sanitizedParams
     );
+
+    // STEP 9: CACHE RESULT
+    // Cache for 1 hour (3600000 ms) - configurable via env
+    const cacheTTL = parseInt(process.env.CACHE_TTL_MS || '3600000', 10);
+    analysisCache.set(cacheKey, analysis, cacheTTL);
+
+    // Log cache stats
+    const stats = analysisCache.getStats();
+    console.log(`📊 Cache stats: ${stats.hits} hits, ${stats.misses} misses, ${stats.hitRate} hit rate, ${stats.size} entries`);
 
     return analysis;
   } catch (error) {
