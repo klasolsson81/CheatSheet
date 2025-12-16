@@ -6,6 +6,48 @@
  */
 
 // =============================================================================
+// SEARCH PROVIDER CONFIGURATION
+// =============================================================================
+
+/**
+ * Available search providers with fallback order
+ */
+export const SEARCH_PROVIDERS = {
+  /** Tavily - Primary provider with excellent content extraction */
+  TAVILY: 'Tavily',
+
+  /** Serper.dev - 2,500 free searches/month, Google results */
+  SERPER: 'Serper',
+
+  /** Brave Search - 2,000 free searches/month, independent index */
+  BRAVE: 'Brave',
+
+  /** SerpAPI - 250 free searches/month, reliable */
+  SERPAPI: 'SerpAPI',
+} as const;
+
+/**
+ * Provider priorities (lower = higher priority)
+ * Used for automatic fallback ordering
+ */
+export const PROVIDER_PRIORITIES = {
+  [SEARCH_PROVIDERS.TAVILY]: 1,
+  [SEARCH_PROVIDERS.SERPER]: 2,
+  [SEARCH_PROVIDERS.BRAVE]: 3,
+  [SEARCH_PROVIDERS.SERPAPI]: 4,
+} as const;
+
+/**
+ * Free tier limits for each provider (searches per month)
+ */
+export const PROVIDER_FREE_LIMITS = {
+  [SEARCH_PROVIDERS.TAVILY]: 1000, // Varies by plan
+  [SEARCH_PROVIDERS.SERPER]: 2500,
+  [SEARCH_PROVIDERS.BRAVE]: 2000,
+  [SEARCH_PROVIDERS.SERPAPI]: 250,
+} as const;
+
+// =============================================================================
 // GPT CONFIGURATION
 // =============================================================================
 

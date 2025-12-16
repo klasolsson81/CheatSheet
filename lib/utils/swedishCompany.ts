@@ -8,6 +8,7 @@
 import OpenAI from 'openai';
 import type { SwedishCompanyData } from '@/lib/types/analysis';
 import { SWEDISH_DATA_CONTENT_LIMIT } from '@/lib/config/constants';
+import searchOrchestrator from '@/lib/services/search/orchestrator';
 
 // Configuration constants
 const MAX_GPT_ITERATIONS = 5; // Maximum GPT search iterations
@@ -30,16 +31,16 @@ export function isSwedishCompany(url: string): boolean {
  * 1. Organisationsnummer (Swedish company ID)
  * 2. Financial data from Allabolag (revenue, profit, equity ratio, etc.)
  *
+ * Uses search orchestrator with automatic fallback between providers.
+ *
  * @param companyName - Company name extracted from URL
  * @param url - Company website URL
- * @param tavilyClient - Tavily search client
  * @param openai - OpenAI client
  * @returns Object with org number and financial data
  */
 export async function searchSwedishCompanyData(
   companyName: string,
   url: string,
-  tavilyClient: any,
   openai: OpenAI
 ): Promise<SwedishCompanyData> {
   console.log(`🤖 GPT-driven search for Swedish company: ${companyName}`);
@@ -118,15 +119,15 @@ Remember: Don't finish until you've searched for financials with the org number!
 
           console.log(`🔍 GPT requested search: "${searchQuery}"`);
 
-          // Execute Tavily search
+          // Execute search with automatic fallback
           try {
-            const searchResult = await tavilyClient.search(searchQuery, {
+            const searchResult = await searchOrchestrator.search(searchQuery, {
               maxResults: 5,
               searchDepth: 'advanced',
             });
 
             const resultText = searchResult.results
-              ?.map((r: any) => `${r.title}\n${r.content}`)
+              ?.map((r) => `${r.title}\n${r.content}`)
               .join('\n\n') || 'No results found';
 
             // Return results to GPT

@@ -8,10 +8,13 @@
  * 4. Recent news & press
  * 5. Financial results
  * 6. Growth signals
+ *
+ * Uses search orchestrator with automatic fallback between providers.
  */
 
 import type { ResearchData } from '@/lib/types/analysis';
 import { SEARCH_LIMITS, CURRENT_MONTH_THRESHOLD } from '@/lib/config/constants';
+import searchOrchestrator from './search/orchestrator';
 
 /**
  * Get current month names for social media search
@@ -29,8 +32,8 @@ function getCurrentMonths(): string {
  * Execute multi-source parallel research
  *
  * Performs 6 parallel searches to gather comprehensive company intelligence.
+ * Uses search orchestrator with automatic fallback between providers.
  *
- * @param tavilyClient - Tavily search client
  * @param companyName - Company name extracted from URL
  * @param url - Company website URL
  * @param websiteContent - Pre-extracted website content
@@ -41,7 +44,6 @@ function getCurrentMonths(): string {
  * @returns Research data from all sources
  */
 export async function performMultiSourceResearch(
-  tavilyClient: any,
   companyName: string,
   url: string,
   websiteContent: string,
@@ -76,7 +78,7 @@ export async function performMultiSourceResearch(
       Promise.resolve(websiteContent.length > 0 ? websiteContent : 'No content extracted'),
 
       // 2. Leadership & Key People Research
-      tavilyClient
+      searchOrchestrator
         .search(
           hasAdvanced && sanitizedParams.contactPerson
             ? `${sanitizedParams.contactPerson} ${companyName} LinkedIn ${sanitizedParams.location || ''} ${sanitizedParams.jobTitle || ''} 2025`
@@ -86,13 +88,13 @@ export async function performMultiSourceResearch(
             searchDepth: 'advanced',
           }
         )
-        .then((res: any) => {
+        .then((res) => {
           if (!res.results || res.results.length === 0) return 'No leadership data found';
-          return res.results.map((r: any) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
+          return res.results.map((r) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
         }),
 
       // 3. Social Media & Personal Activity
-      tavilyClient
+      searchOrchestrator
         .search(
           hasAdvanced && sanitizedParams.contactPerson
             ? `${sanitizedParams.contactPerson} LinkedIn post ${sanitizedParams.specificFocus || ''} ${getCurrentMonths()} 2025`
@@ -102,37 +104,37 @@ export async function performMultiSourceResearch(
             searchDepth: 'advanced',
           }
         )
-        .then((res: any) => {
+        .then((res) => {
           if (!res.results || res.results.length === 0) return 'No social activity found';
-          return res.results.map((r: any) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
+          return res.results.map((r) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
         }),
 
       // 4. Recent News & Press Releases
-      tavilyClient
+      searchOrchestrator
         .search(`${companyName} news press release announcement 2025`, {
           maxResults: SEARCH_LIMITS.NEWS,
           searchDepth: 'advanced',
         })
-        .then((res: any) => {
+        .then((res) => {
           if (!res.results || res.results.length === 0) return 'No recent news found';
-          return res.results.map((r: any) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
+          return res.results.map((r) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
         }),
 
       // 5. Financial Results & Reports (with Swedish company optimization)
       Promise.all([
         // General financial search
-        tavilyClient.search(`${companyName} financial results quarterly earnings revenue 2024 2025`, {
+        searchOrchestrator.search(`${companyName} financial results quarterly earnings revenue 2024 2025`, {
           maxResults: SEARCH_LIMITS.FINANCIALS_GENERAL,
           searchDepth: 'advanced',
         }),
         // Swedish-specific: Prioritize org number search if available
         isSwedish && orgNumber
-          ? tavilyClient.search(`${orgNumber} Allabolag årsredovisning omsättning`, {
+          ? searchOrchestrator.search(`${orgNumber} Allabolag årsredovisning omsättning`, {
               maxResults: SEARCH_LIMITS.FINANCIALS_SWEDISH,
               searchDepth: 'advanced',
             })
           : isSwedish
-            ? tavilyClient.search(`${url} Allabolag omsättning`, {
+            ? searchOrchestrator.search(`${url} Allabolag omsättning`, {
                 maxResults: SEARCH_LIMITS.FINANCIALS_SWEDISH,
                 searchDepth: 'advanced',
               })
@@ -140,23 +142,23 @@ export async function performMultiSourceResearch(
       ]).then(([general, swedishSearch]) => {
         const results = [];
         if (general?.results)
-          results.push(...general.results.map((r: any) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`));
+          results.push(...general.results.map((r) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`));
         if (swedishSearch?.results)
           results.push(
-            ...swedishSearch.results.map((r: any) => `[SOURCE: ${r.url}] [Allabolag] ${r.title}: ${r.content}`)
+            ...swedishSearch.results.map((r) => `[SOURCE: ${r.url}] [Allabolag] ${r.title}: ${r.content}`)
           );
         return results.length > 0 ? results.join('\n') : 'No financial data found';
       }),
 
       // 6. Growth Signals (Hiring, Funding, Expansion)
-      tavilyClient
+      searchOrchestrator
         .search(`${companyName} hiring jobs funding expansion partnership 2025`, {
           maxResults: SEARCH_LIMITS.GROWTH_SIGNALS,
           searchDepth: 'advanced',
         })
-        .then((res: any) => {
+        .then((res) => {
           if (!res.results || res.results.length === 0) return 'No growth signals found';
-          return res.results.map((r: any) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
+          return res.results.map((r) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
         }),
     ]);
 
@@ -201,16 +203,17 @@ export async function performMultiSourceResearch(
 }
 
 /**
- * Extract website content using Tavily
+ * Extract website content using search orchestrator
  *
- * @param tavilyClient - Tavily search client
+ * Uses Tavily provider for content extraction (only provider that supports it).
+ * Falls back to empty string if extraction fails.
+ *
  * @param url - Website URL to extract
  * @returns Extracted website content or empty string
  */
-export async function extractWebsiteContent(tavilyClient: any, url: string): Promise<string> {
+export async function extractWebsiteContent(url: string): Promise<string> {
   try {
-    const extractResult = await tavilyClient.extract([url]);
-    const rawContent = extractResult.results?.[0]?.rawContent || '';
+    const rawContent = await searchOrchestrator.extract(url);
 
     if (!rawContent) {
       console.log('⚠️ No content extracted from website');

@@ -1,7 +1,6 @@
 'use server';
 
 import OpenAI from 'openai';
-import { tavily } from '@tavily/core';
 import { headers } from 'next/headers';
 import { checkRateLimit, getClientIP, getRateLimitErrorMessage } from '@/lib/rateLimit';
 import { normalizeUrl, sanitizeAdvancedParams } from '@/lib/validators/urlValidator';
@@ -98,13 +97,9 @@ export async function analyzeUrl(
 
     logger.cacheMiss(cacheKey);
 
-    // STEP 5: INITIALIZE CLIENTS
+    // STEP 5: INITIALIZE OPENAI CLIENT
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-    });
-
-    const tavilyClient = tavily({
-      apiKey: process.env.TAVILY_API_KEY,
     });
 
     // Extract company name from URL
@@ -115,7 +110,7 @@ export async function analyzeUrl(
     logger.analysisStart(url, isSwedish, !!sanitizedParams);
 
     // STEP 6: EXTRACT WEBSITE CONTENT
-    const websiteContent = await extractWebsiteContent(tavilyClient, url);
+    const websiteContent = await extractWebsiteContent(url);
 
     // STEP 7: SWEDISH COMPANY SPECIAL HANDLING
     // If Swedish company, use GPT-driven search for org number + financials
@@ -125,7 +120,7 @@ export async function analyzeUrl(
     if (isSwedish) {
       console.log('🇸🇪 Swedish company detected, using GPT-driven search...');
       try {
-        const gptResult = await searchSwedishCompanyData(companyName, url, tavilyClient, openai);
+        const gptResult = await searchSwedishCompanyData(companyName, url, openai);
         orgNumber = gptResult.orgNumber;
         gptFinancialData = gptResult.financialData;
       } catch (error) {
@@ -135,7 +130,6 @@ export async function analyzeUrl(
 
     // STEP 8: MULTI-SOURCE PARALLEL RESEARCH
     const research = await performMultiSourceResearch(
-      tavilyClient,
       companyName,
       url,
       websiteContent,
