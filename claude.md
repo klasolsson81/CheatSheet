@@ -245,7 +245,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
-**Commit: TBD - perf: optimize AI search performance (40-60% faster)**
+**Commit: `45da166` - perf: optimize AI search performance (40-60% faster)**
 - Significantly improved search speed by reducing unnecessary operations
 - Swedish GPT search optimizations:
   - Reduced max iterations from 8 to 5 (saves 15-30 seconds)
