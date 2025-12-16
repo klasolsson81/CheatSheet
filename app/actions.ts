@@ -92,7 +92,7 @@ TASK 2 (MANDATORY): Once you have org number → Search for financial data
 - Find: omsättning (revenue), resultat (profit), soliditet, tillgångar
 - Example: "559365-2604 allabolag bokslut 2024"
 
-You have up to 7 search_web calls. After finding org number, you MUST search for financials before finishing.`,
+You have up to 4 search_web calls. Be efficient - stop when you have both org number AND financial data.`,
     },
     {
       role: 'user',
@@ -103,7 +103,7 @@ Remember: Don't finish until you've searched for financials with the org number!
   ];
 
   let iterations = 0;
-  const maxIterations = 8;
+  const maxIterations = 5; // Reduced from 8 to 5 for faster performance
   let orgNumber = '';
   let financialData = '';
 
@@ -114,7 +114,7 @@ Remember: Don't finish until you've searched for financials with the org number!
       model: 'gpt-5.2',
       messages,
       tools,
-      tool_choice: iterations < 7 ? 'auto' : 'none', // Allow tools for first 6 iterations, then force completion
+      tool_choice: iterations < 4 ? 'auto' : 'none', // Reduced from 7 to 4 for faster completion
     });
 
     const assistantMessage = response.choices[0].message;
@@ -159,7 +159,6 @@ Remember: Don't finish until you've searched for financials with the org number!
     } else {
       // GPT is done, extract final answer
       const finalAnswer = assistantMessage.content || '';
-      console.log(`📝 GPT final answer (${finalAnswer.length} chars): ${finalAnswer.slice(0, 300)}...`);
 
       // Extract org number from GPT's response
       const orgRegex = /\b(5\d{5}[-]?\d{4})\b/g;
@@ -261,15 +260,8 @@ export async function analyzeUrl(
 
         // Store GPT's financial findings
         gptFinancialData = gptResult.financialData;
-        console.log(`📊 GPT financial data length: ${gptFinancialData.length} characters`);
-        if (gptFinancialData) {
-          console.log(`📊 GPT financial data preview: ${gptFinancialData.slice(0, 200)}...`);
-        }
       } catch (error) {
-        console.error('❌ GPT-driven search failed:', error);
-        if (error instanceof Error) {
-          console.error('Error details:', error.message);
-        }
+        console.error('❌ GPT-driven search failed:', error instanceof Error ? error.message : 'Unknown error');
       }
     }
 
@@ -307,7 +299,7 @@ export async function analyzeUrl(
           ? `${advancedParams.contactPerson} LinkedIn post ${advancedParams.specificFocus || ''} ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`
           : `${companyName} ${targetContext} LinkedIn post recent ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`,
         {
-          maxResults: 10,
+          maxResults: 5, // Reduced from 10 to 5 for faster performance
           searchDepth: 'advanced',
         }
       ).then(res => {
@@ -317,53 +309,41 @@ export async function analyzeUrl(
 
       // 4. Recent News & Press Releases
       tavilyClient.search(`${companyName} news press release announcement 2025`, {
-        maxResults: 8,
+        maxResults: 5, // Reduced from 8 to 5 for faster performance
         searchDepth: 'advanced',
       }).then(res => {
         if (!res.results || res.results.length === 0) return 'No recent news found';
         return res.results.map(r => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`).join('\n');
       }),
 
-      // 5. Financial Results & Reports (ENHANCED for Swedish companies)
+      // 5. Financial Results & Reports (OPTIMIZED - reduced redundant searches)
       Promise.all([
         // General financial search
         tavilyClient.search(`${companyName} financial results quarterly earnings revenue 2024 2025`, {
           maxResults: 2,
           searchDepth: 'advanced',
         }),
-        // Swedish-specific sources - Multiple targeted searches for better accuracy
-        // PRIORITY 1: If we have org number, search with it (100% accurate)
+        // Swedish-specific: Prioritize org number search if available, otherwise URL search
+        // PRIORITY 1: If we have org number, search with it (most accurate)
         isSwedish && orgNumber ? tavilyClient.search(`${orgNumber} Allabolag årsredovisning omsättning`, {
-          maxResults: 5,
+          maxResults: 3, // Reduced from 5 to 3
           searchDepth: 'advanced',
-        }) : Promise.resolve(null),
-        // PRIORITY 2: Search by URL to find Allabolag page
-        isSwedish ? tavilyClient.search(`${url} Allabolag`, {
-          maxResults: 5,
-          searchDepth: 'advanced',
-        }) : Promise.resolve(null),
-        // FALLBACK 3: Company name searches
-        isSwedish ? tavilyClient.search(`"${companyName} AB" Allabolag omsättning vinst 2024`, {
+        }) :
+        // PRIORITY 2: If no org number, search by URL (backup)
+        isSwedish ? tavilyClient.search(`${url} Allabolag omsättning`, {
           maxResults: 3,
           searchDepth: 'advanced',
         }) : Promise.resolve(null),
-        isSwedish ? tavilyClient.search(`${companyName} site:allabolag.se årsredovisning`, {
-          maxResults: 3,
-          searchDepth: 'advanced',
-        }) : Promise.resolve(null),
-      ]).then(([general, orgSearch, urlSearch, allabolag1, allabolag2]) => {
+      ]).then(([general, swedishSearch]) => {
         const results = [];
         if (general?.results) results.push(...general.results.map((r: any) => `[SOURCE: ${r.url}] ${r.title}: ${r.content}`));
-        if (orgSearch?.results) results.push(...orgSearch.results.map((r: any) => `[SOURCE: ${r.url}] [Allabolag-OrgNr-${orgNumber}] ${r.title}: ${r.content}`));
-        if (urlSearch?.results) results.push(...urlSearch.results.map((r: any) => `[SOURCE: ${r.url}] [Allabolag-URL] ${r.title}: ${r.content}`));
-        if (allabolag1?.results) results.push(...allabolag1.results.map((r: any) => `[SOURCE: ${r.url}] [Allabolag] ${r.title}: ${r.content}`));
-        if (allabolag2?.results) results.push(...allabolag2.results.map((r: any) => `[SOURCE: ${r.url}] [Allabolag] ${r.title}: ${r.content}`));
+        if (swedishSearch?.results) results.push(...swedishSearch.results.map((r: any) => `[SOURCE: ${r.url}] [Allabolag] ${r.title}: ${r.content}`));
         return results.length > 0 ? results.join('\n') : 'No financial data found';
       }),
 
       // 6. Growth Signals (Hiring, Funding, Expansion)
       tavilyClient.search(`${companyName} hiring jobs funding expansion partnership 2025`, {
-        maxResults: 6,
+        maxResults: 4, // Reduced from 6 to 4 for faster performance
         searchDepth: 'advanced',
       }).then(res => {
         if (!res.results || res.results.length === 0) return 'No growth signals found';
@@ -384,10 +364,6 @@ export async function analyzeUrl(
     };
 
     console.log('✅ Research complete, sending to AI...');
-
-    // Debug: Log first 500 chars of social media data to verify [SOURCE: ...] tags
-    console.log('🔍 DEBUG - Social Media data preview (first 500 chars):');
-    console.log(research.socialMedia.slice(0, 500));
 
     // Language configuration
     const languageInstruction = language === 'sv'
