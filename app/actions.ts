@@ -530,7 +530,18 @@ Analyze and provide sales intelligence.`;
       throw new Error('No response from AI. Please try again.');
     }
 
-    const analysis: AnalysisResult = JSON.parse(responseContent);
+    // Log GPT response for debugging
+    console.log('📝 GPT response length:', responseContent.length);
+    console.log('📝 GPT response preview:', responseContent.slice(0, 500));
+
+    let analysis: AnalysisResult;
+    try {
+      analysis = JSON.parse(responseContent);
+    } catch (parseError) {
+      console.error('❌ JSON parse error:', parseError);
+      console.error('❌ Raw response:', responseContent);
+      throw new Error('Failed to parse AI response. The response may be malformed.');
+    }
 
     // Check for NSFW content flag
     if (analysis.error === 'NSFW_CONTENT') {
@@ -545,11 +556,21 @@ Analyze and provide sales intelligence.`;
       };
     }
 
-    // Validate structure
-    if (!analysis.summary || !analysis.ice_breaker || !Array.isArray(analysis.ice_breaker) ||
-        analysis.ice_breaker.length === 0 || !analysis.pain_points ||
-        !analysis.sales_hooks || !analysis.financial_signals || !analysis.company_tone) {
-      throw new Error('AI returned incomplete analysis. Please try again.');
+    // Validate structure with detailed logging
+    const validationErrors: string[] = [];
+    if (!analysis.summary) validationErrors.push('summary');
+    if (!analysis.ice_breaker) validationErrors.push('ice_breaker');
+    if (analysis.ice_breaker && !Array.isArray(analysis.ice_breaker)) validationErrors.push('ice_breaker not array');
+    if (analysis.ice_breaker && Array.isArray(analysis.ice_breaker) && analysis.ice_breaker.length === 0) validationErrors.push('ice_breaker empty');
+    if (!analysis.pain_points) validationErrors.push('pain_points');
+    if (!analysis.sales_hooks) validationErrors.push('sales_hooks');
+    if (!analysis.financial_signals) validationErrors.push('financial_signals');
+    if (!analysis.company_tone) validationErrors.push('company_tone');
+
+    if (validationErrors.length > 0) {
+      console.error('❌ Validation failed. Missing/invalid fields:', validationErrors.join(', '));
+      console.error('❌ Analysis object:', JSON.stringify(analysis, null, 2));
+      throw new Error(`AI returned incomplete analysis. Missing: ${validationErrors.join(', ')}`);
     }
 
     console.log('🎉 Analysis complete!');
