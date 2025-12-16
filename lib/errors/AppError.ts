@@ -5,6 +5,8 @@
  * and detailed developer information for debugging.
  */
 
+import { HTTP_STATUS } from '@/lib/config/constants';
+
 /**
  * Error codes for different error types
  */
@@ -47,7 +49,7 @@ export class AppError extends Error {
     code: ErrorCode,
     userMessage: string,
     developerMessage: string,
-    statusCode: number = 500,
+    statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR,
     context?: Record<string, unknown>
   ) {
     super(developerMessage);
@@ -85,7 +87,7 @@ export class AppError extends Error {
  */
 export class ValidationError extends AppError {
   constructor(userMessage: string, developerMessage: string, context?: Record<string, unknown>) {
-    super(ErrorCode.INVALID_INPUT, userMessage, developerMessage, 400, context);
+    super(ErrorCode.INVALID_INPUT, userMessage, developerMessage, HTTP_STATUS.BAD_REQUEST, context);
     this.name = 'ValidationError';
   }
 }
@@ -99,7 +101,7 @@ export class RateLimitError extends AppError {
     retryAfter: number,
     developerMessage: string = 'Rate limit exceeded'
   ) {
-    super(ErrorCode.RATE_LIMIT_EXCEEDED, userMessage, developerMessage, 429, { retryAfter });
+    super(ErrorCode.RATE_LIMIT_EXCEEDED, userMessage, developerMessage, HTTP_STATUS.TOO_MANY_REQUESTS, { retryAfter });
     this.name = 'RateLimitError';
   }
 }
@@ -115,7 +117,7 @@ export class APIError extends AppError {
     context?: Record<string, unknown>
   ) {
     const code = service === 'OpenAI' ? ErrorCode.OPENAI_ERROR : ErrorCode.TAVILY_ERROR;
-    super(code, userMessage, developerMessage, 502, { service, ...context });
+    super(code, userMessage, developerMessage, HTTP_STATUS.BAD_GATEWAY, { service, ...context });
     this.name = 'APIError';
   }
 }
@@ -125,7 +127,7 @@ export class APIError extends AppError {
  */
 export class AnalysisError extends AppError {
   constructor(userMessage: string, developerMessage: string, context?: Record<string, unknown>) {
-    super(ErrorCode.ANALYSIS_FAILED, userMessage, developerMessage, 500, context);
+    super(ErrorCode.ANALYSIS_FAILED, userMessage, developerMessage, HTTP_STATUS.INTERNAL_SERVER_ERROR, context);
     this.name = 'AnalysisError';
   }
 }

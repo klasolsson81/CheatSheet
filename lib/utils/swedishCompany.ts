@@ -7,6 +7,7 @@
 
 import OpenAI from 'openai';
 import type { SwedishCompanyData } from '@/lib/types/analysis';
+import { SWEDISH_DATA_CONTENT_LIMIT } from '@/lib/config/constants';
 
 // Configuration constants
 const MAX_GPT_ITERATIONS = 5; // Maximum GPT search iterations
@@ -132,7 +133,7 @@ Remember: Don't finish until you've searched for financials with the org number!
             messages.push({
               role: 'tool',
               tool_call_id: toolCall.id,
-              content: resultText.slice(0, 3000), // Limit length
+              content: resultText.slice(0, SWEDISH_DATA_CONTENT_LIMIT), // Limit length
             });
           } catch (error) {
             messages.push({

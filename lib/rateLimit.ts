@@ -11,6 +11,8 @@
  * For production with multiple instances, consider Redis-based rate limiting.
  */
 
+import { RATE_LIMIT_CONFIG } from '@/lib/config/constants';
+
 interface RateLimitEntry {
   count: number;
   resetTime: number;
@@ -71,7 +73,7 @@ export function checkRateLimit(identifier: string): {
       allowed: false,
       remaining: 0,
       resetTime: entry.resetTime,
-      retryAfter: Math.ceil((entry.resetTime - now) / 1000), // seconds
+      retryAfter: Math.ceil((entry.resetTime - now) / RATE_LIMIT_CONFIG.MS_TO_SECONDS), // seconds
     };
   }
 

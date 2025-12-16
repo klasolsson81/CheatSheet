@@ -9,6 +9,7 @@ import OpenAI from 'openai';
 import type { ResearchData, AnalysisResult } from '@/lib/types/analysis';
 import { AnalysisResponseSchema } from '@/lib/schemas/analysis';
 import { ZodError } from 'zod';
+import { GPT_TEMPERATURE, GPT_RESEARCH_LIMITS, LOGGING_CONFIG } from '@/lib/config/constants';
 
 /**
  * Build language instruction for GPT
@@ -171,22 +172,22 @@ IMPORTANT: Tailor the ice breaker, pain points, and sales hooks specifically for
   return `Company: ${companyName} (${url})${isSwedish ? ' [🇸🇪 Swedish Company - GPT-verified Allabolag data included below]' : ''}${advancedContext}
 
 === WEBSITE (PRIMARY SOURCE - TRUST THIS) ===
-${research.websiteContent.slice(0, 3000)}
+${research.websiteContent.slice(0, GPT_RESEARCH_LIMITS.WEBSITE_CONTENT)}
 
 === LEADERSHIP & KEY PEOPLE ===
-${research.leadership.slice(0, 2000)}
+${research.leadership.slice(0, GPT_RESEARCH_LIMITS.LEADERSHIP)}
 
 === SOCIAL MEDIA ACTIVITY (Prioritize recent, personal posts!) ===
-${research.socialMedia.slice(0, 2000)}
+${research.socialMedia.slice(0, GPT_RESEARCH_LIMITS.SOCIAL_MEDIA)}
 
 === RECENT NEWS & PRESS ===
-${research.news.slice(0, 2500)}
+${research.news.slice(0, GPT_RESEARCH_LIMITS.NEWS)}
 
 === FINANCIAL RESULTS ${isSwedish ? '(INCLUDES GPT-VERIFIED ALLABOLAG DATA BELOW)' : ''} ===
-${research.financials.slice(0, 4000)}
+${research.financials.slice(0, GPT_RESEARCH_LIMITS.FINANCIALS)}
 
 === GROWTH SIGNALS ===
-${research.signals.slice(0, 1500)}
+${research.signals.slice(0, GPT_RESEARCH_LIMITS.GROWTH_SIGNALS)}
 
 Analyze and provide sales intelligence.`;
 }
@@ -235,7 +236,7 @@ function validateAndFixAnalysis(
 
   if (validationErrors.length > 0) {
     console.error('❌ Validation failed. Missing/invalid fields:', validationErrors.join(', '));
-    console.error('❌ Analysis object:', JSON.stringify(analysis, null, 2));
+    console.error('❌ Analysis object:', JSON.stringify(analysis, null, LOGGING_CONFIG.JSON_INDENT_SPACES));
     throw new Error(`AI returned incomplete analysis. Missing: ${validationErrors.join(', ')}`);
   }
 
@@ -278,7 +279,7 @@ export async function analyzeCompanyWithGPT(
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    temperature: 0.7,
+    temperature: GPT_TEMPERATURE,
     response_format: { type: 'json_object' },
   });
 
@@ -290,7 +291,7 @@ export async function analyzeCompanyWithGPT(
 
   // Log GPT response for debugging
   console.log('📝 GPT response length:', responseContent.length);
-  console.log('📝 GPT response preview:', responseContent.slice(0, 500));
+  console.log('📝 GPT response preview:', responseContent.slice(0, GPT_RESEARCH_LIMITS.RESPONSE_PREVIEW));
 
   // Parse JSON first
   let rawAnalysis: unknown;
@@ -325,7 +326,7 @@ export async function analyzeCompanyWithGPT(
   } catch (validationError) {
     if (validationError instanceof ZodError) {
       console.error('❌ Zod validation error:', validationError.issues);
-      console.error('❌ Raw analysis:', JSON.stringify(rawAnalysis, null, 2));
+      console.error('❌ Raw analysis:', JSON.stringify(rawAnalysis, null, LOGGING_CONFIG.JSON_INDENT_SPACES));
 
       // Provide detailed error message
       const errorMessages = validationError.issues.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ');

@@ -8,10 +8,11 @@
 
 import type { AnalysisResult, AdvancedSearchParams } from '@/lib/types/analysis';
 import crypto from 'crypto';
+import { CACHE_CONFIG } from '@/lib/config/constants';
 
 // Configuration
-const MAX_CACHE_SIZE = parseInt(process.env.CACHE_MAX_SIZE || '100', 10);
-const DEFAULT_TTL_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+const MAX_CACHE_SIZE = parseInt(process.env.CACHE_MAX_SIZE || String(CACHE_CONFIG.DEFAULT_MAX_SIZE), 10);
+const DEFAULT_TTL_MS = parseInt(process.env.CACHE_TTL_MS || String(CACHE_CONFIG.DEFAULT_TTL_MS), 10);
 
 interface CacheEntry {
   data: AnalysisResult;
@@ -94,7 +95,7 @@ class AnalysisCache {
     // Check if expired
     const now = Date.now();
     if (now - entry.timestamp > entry.ttl) {
-      console.log(`🗑️ Cache expired: ${key.slice(0, 12)}...`);
+      console.log(`🗑️ Cache expired: ${key.slice(0, CACHE_CONFIG.KEY_PREVIEW_LENGTH)}...`);
       this.cache.delete(key);
       this.stats.misses++;
       this.stats.size--;
@@ -106,7 +107,7 @@ class AnalysisCache {
     entry.lastAccessed = now;
     this.stats.hits++;
 
-    console.log(`✅ Cache hit: ${key.slice(0, 12)}... (accessed ${entry.accessCount}x)`);
+    console.log(`✅ Cache hit: ${key.slice(0, CACHE_CONFIG.KEY_PREVIEW_LENGTH)}... (accessed ${entry.accessCount}x)`);
     return entry.data;
   }
 
@@ -136,7 +137,7 @@ class AnalysisCache {
       this.stats.size++;
     }
 
-    console.log(`💾 Cached: ${key.slice(0, 12)}... (TTL: ${ttl / 1000}s, size: ${this.cache.size}/${MAX_CACHE_SIZE})`);
+    console.log(`💾 Cached: ${key.slice(0, CACHE_CONFIG.KEY_PREVIEW_LENGTH)}... (TTL: ${ttl / 1000}s, size: ${this.cache.size}/${MAX_CACHE_SIZE})`);
   }
 
   /**
@@ -155,7 +156,7 @@ class AnalysisCache {
     }
 
     if (oldestKey) {
-      console.log(`🗑️ Evicting LRU: ${oldestKey.slice(0, 12)}...`);
+      console.log(`🗑️ Evicting LRU: ${oldestKey.slice(0, CACHE_CONFIG.KEY_PREVIEW_LENGTH)}...`);
       this.cache.delete(oldestKey);
       this.stats.evictions++;
       this.stats.size--;
@@ -197,7 +198,7 @@ class AnalysisCache {
    */
   getStats(): CacheStats & { hitRate: string } {
     const total = this.stats.hits + this.stats.misses;
-    const hitRate = total > 0 ? ((this.stats.hits / total) * 100).toFixed(2) : '0.00';
+    const hitRate = total > 0 ? ((this.stats.hits / total) * 100).toFixed(CACHE_CONFIG.HIT_RATE_DECIMALS) : CACHE_CONFIG.DEFAULT_HIT_RATE;
 
     return {
       ...this.stats,
@@ -223,11 +224,11 @@ class AnalysisCache {
 // Singleton instance
 const analysisCache = new AnalysisCache();
 
-// Cleanup expired entries every 5 minutes
+// Cleanup expired entries periodically
 if (typeof setInterval !== 'undefined') {
   setInterval(() => {
     analysisCache.cleanup();
-  }, 5 * 60 * 1000);
+  }, CACHE_CONFIG.CLEANUP_INTERVAL_MS);
 }
 
 export default analysisCache;

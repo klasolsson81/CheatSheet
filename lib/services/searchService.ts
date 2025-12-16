@@ -11,14 +11,7 @@
  */
 
 import type { ResearchData } from '@/lib/types/analysis';
-
-// Configuration constants
-const MAX_LEADERSHIP_RESULTS = 4;
-const MAX_SOCIAL_MEDIA_RESULTS = 5;
-const MAX_NEWS_RESULTS = 5;
-const MAX_FINANCIAL_RESULTS_GENERAL = 2;
-const MAX_FINANCIAL_RESULTS_SWEDISH = 3;
-const MAX_GROWTH_SIGNALS_RESULTS = 4;
+import { SEARCH_LIMITS, CURRENT_MONTH_THRESHOLD } from '@/lib/config/constants';
 
 /**
  * Get current month names for social media search
@@ -27,7 +20,7 @@ const MAX_GROWTH_SIGNALS_RESULTS = 4;
  */
 function getCurrentMonths(): string {
   const currentMonth = new Date().getMonth();
-  return currentMonth < 6
+  return currentMonth < CURRENT_MONTH_THRESHOLD
     ? 'January February March April May'
     : 'June July August September October November December';
 }
@@ -89,7 +82,7 @@ export async function performMultiSourceResearch(
             ? `${sanitizedParams.contactPerson} ${companyName} LinkedIn ${sanitizedParams.location || ''} ${sanitizedParams.jobTitle || ''} 2025`
             : `${companyName} ${targetContext} CEO founder leadership team LinkedIn 2025`,
           {
-            maxResults: MAX_LEADERSHIP_RESULTS,
+            maxResults: SEARCH_LIMITS.LEADERSHIP,
             searchDepth: 'advanced',
           }
         )
@@ -105,7 +98,7 @@ export async function performMultiSourceResearch(
             ? `${sanitizedParams.contactPerson} LinkedIn post ${sanitizedParams.specificFocus || ''} ${getCurrentMonths()} 2025`
             : `${companyName} ${targetContext} LinkedIn post recent ${getCurrentMonths()} 2025`,
           {
-            maxResults: MAX_SOCIAL_MEDIA_RESULTS,
+            maxResults: SEARCH_LIMITS.SOCIAL_MEDIA,
             searchDepth: 'advanced',
           }
         )
@@ -117,7 +110,7 @@ export async function performMultiSourceResearch(
       // 4. Recent News & Press Releases
       tavilyClient
         .search(`${companyName} news press release announcement 2025`, {
-          maxResults: MAX_NEWS_RESULTS,
+          maxResults: SEARCH_LIMITS.NEWS,
           searchDepth: 'advanced',
         })
         .then((res: any) => {
@@ -129,18 +122,18 @@ export async function performMultiSourceResearch(
       Promise.all([
         // General financial search
         tavilyClient.search(`${companyName} financial results quarterly earnings revenue 2024 2025`, {
-          maxResults: MAX_FINANCIAL_RESULTS_GENERAL,
+          maxResults: SEARCH_LIMITS.FINANCIALS_GENERAL,
           searchDepth: 'advanced',
         }),
         // Swedish-specific: Prioritize org number search if available
         isSwedish && orgNumber
           ? tavilyClient.search(`${orgNumber} Allabolag årsredovisning omsättning`, {
-              maxResults: MAX_FINANCIAL_RESULTS_SWEDISH,
+              maxResults: SEARCH_LIMITS.FINANCIALS_SWEDISH,
               searchDepth: 'advanced',
             })
           : isSwedish
             ? tavilyClient.search(`${url} Allabolag omsättning`, {
-                maxResults: MAX_FINANCIAL_RESULTS_SWEDISH,
+                maxResults: SEARCH_LIMITS.FINANCIALS_SWEDISH,
                 searchDepth: 'advanced',
               })
             : Promise.resolve(null),
@@ -158,7 +151,7 @@ export async function performMultiSourceResearch(
       // 6. Growth Signals (Hiring, Funding, Expansion)
       tavilyClient
         .search(`${companyName} hiring jobs funding expansion partnership 2025`, {
-          maxResults: MAX_GROWTH_SIGNALS_RESULTS,
+          maxResults: SEARCH_LIMITS.GROWTH_SIGNALS,
           searchDepth: 'advanced',
         })
         .then((res: any) => {
