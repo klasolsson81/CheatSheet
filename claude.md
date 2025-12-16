@@ -245,6 +245,19 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
+**Commit: (pending) - security: remove unsafe process.emitWarning override**
+- **SECURITY FIX (CODE_REVIEW.md #8):**
+  - Removed global `process.emitWarning` override from `app/actions.ts`
+  - **Risk:** Override was manipulating Node.js global process object to suppress Tavily SDK deprecation warnings
+  - **Problem:** Global process manipulation can interfere with critical warnings/errors from other parts of the application
+  - **Trade-off:** Accepting deprecation warning from Tavily's url.parse() usage as safer alternative
+  - **Decision:** Security > Clean logs - deprecation warnings are informational, not errors
+- **FILES CHANGED:**
+  - `app/actions.ts` - Removed lines 13-22 (process.emitWarning override block)
+  - `claude.md` - Documented decision and marked #8 as complete
+- **TESTING:** ✅ Build successful with zero errors, no warnings appeared
+- **IMPACT:** Eliminates security risk while maintaining full functionality
+
 **Commit: `8af9fdc` - feat: add Zod runtime validation, dev guidelines, and Vercel Analytics**
 - **ZOD RUNTIME VALIDATION (CODE_REVIEW.md #7):**
   - Installed Zod for runtime type safety
@@ -674,10 +687,14 @@ git push
   - **Resultat:** Runtime type safety, förhindrar malformed API responses
   - **Ref:** CODE_REVIEW.md #7
 
-- [ ] **Process Manipulation** - Ta bort process.emitWarning override
+- [x] **Process Manipulation** - ✅ KLAR! Ta bort process.emitWarning override
   - **Problem:** Global override av `process.emitWarning` (säkerhetsrisk)
   - **Nuvarande:** Används för att suppresa Tavily SDK deprecation warning
-  - **Lösning:** Hitta bättre sätt (Tavily SDK config, eller acceptera warning)
+  - **Lösning implementerad:**
+    - ✅ Borttagen process.emitWarning override från `app/actions.ts`
+    - ✅ Accepterar Tavily deprecation warning som säkrare alternativ
+    - ✅ Security över clean logs - warnings är informativa, inte errors
+  - **Resultat:** Eliminerar säkerhetsrisk, ingen påverkan på funktionalitet
   - **Ref:** CODE_REVIEW.md #8
 
 ### 🟢 Medium Priority (Kan vänta)

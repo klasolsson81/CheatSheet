@@ -10,17 +10,6 @@ import { extractWebsiteContent, performMultiSourceResearch } from '@/lib/service
 import { analyzeCompanyWithGPT } from '@/lib/services/gptService';
 import type { AnalysisResult, AdvancedSearchParams } from '@/lib/types/analysis';
 
-// Suppress Tavily's url.parse() deprecation warning from Tavily SDK
-if (typeof process !== 'undefined') {
-  const originalEmitWarning = process.emitWarning.bind(process);
-  process.emitWarning = (warning: string | Error, type?: any, code?: any, ctor?: any) => {
-    if (typeof warning === 'string' && warning.includes('url.parse()')) {
-      return; // Suppress url.parse() deprecation from Tavily SDK
-    }
-    return originalEmitWarning(warning, type, code, ctor);
-  };
-}
-
 /**
  * Analyze company URL and generate sales intelligence
  *
