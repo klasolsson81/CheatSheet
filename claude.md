@@ -245,6 +245,30 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
+**Commit: `c044400` - feat: implement critical security and SEO fixes from code review**
+- **SECURITY IMPROVEMENTS:**
+  - Added comprehensive input sanitization to prevent XSS and prompt injection attacks
+  - Created `sanitizeUrl()` function: validates URL format, blocks dangerous patterns (javascript:, data:, script tags), limits length to 500 chars
+  - Created `sanitizeTextInput()` function: removes prompt injection patterns, escapes special characters, limits field lengths
+  - Applied sanitization to all user inputs (URL, contact person, job title, department, location, specific focus)
+  - Replaced all `advancedParams` references with `sanitizedParams` after validation
+- **SEO ENHANCEMENTS:**
+  - Added comprehensive metadata configuration (OpenGraph, Twitter Cards, viewport, canonical URL)
+  - Added keywords, authors, robots configuration for better search engine indexing
+  - Added icons configuration (favicon, apple-icon, manifest)
+  - Configured theme color for consistent branding across devices
+- **PERFORMANCE:**
+  - Optimized font loading: replaced Google CDN with Next.js native font loader
+  - Used `Atkinson_Hyperlegible` with proper preload and swap settings
+  - Eliminated render-blocking external font requests
+- **CODE QUALITY:**
+  - Fixed Next.js 15+ warnings: moved viewport and themeColor to separate export as recommended
+  - Clean build with zero warnings
+  - Followed Next.js best practices for metadata configuration
+- **FILES CHANGED:** `app/actions.ts`, `app/layout.tsx`, `CODE_REVIEW.md` (new)
+- **REFERENCE:** Addresses critical issues #1, #2, #4, #6 from CODE_REVIEW.md
+- **IMPACT:** Significantly improved security posture and SEO readiness
+
 **Commit: `7cc702e` - fix: suppress Tavily SDK url.parse() deprecation warning**
 - Removed red deprecation warning from Vercel logs
 - Warning was from Tavily SDK using deprecated `url.parse()` (not our code)
