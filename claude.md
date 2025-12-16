@@ -245,6 +245,20 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
+**Commit: `7cc702e` - fix: suppress Tavily SDK url.parse() deprecation warning**
+- Removed red deprecation warning from Vercel logs
+- Warning was from Tavily SDK using deprecated `url.parse()` (not our code)
+- Suppressed the warning to keep logs clean
+- Does not affect functionality - purely cosmetic fix
+- **Files modified:** `app/actions.ts`
+
+**Commit: `80f0a12` - debug: add detailed logging for GPT response validation**
+- Added debug logging to help troubleshoot GPT validation issues
+- Logs GPT response length and preview
+- Detailed validation error messages showing which fields are missing
+- Helps diagnose incomplete analysis errors
+- **Files modified:** `app/actions.ts`
+
 **Commit: `eb2e90c` - fix: improve error handling for API limits and failures**
 - Added better error detection and user-friendly messages for Tavily API usage limits
 - Early detection of API limit errors before attempting GPT analysis
