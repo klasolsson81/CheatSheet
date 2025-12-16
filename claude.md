@@ -245,7 +245,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
-**Commit: TBD - improve: enhanced text contrast and button text clarity**
+**Commit: `d2d867e` - improve: enhanced text contrast and button text clarity**
 - Improved text contrast across all UI elements for better readability (especially for users with vision impairments)
 - Updated all text colors from dark slate to lighter shades:
   - Subtitle: `text-slate-400` → `text-slate-200`
