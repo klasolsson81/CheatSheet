@@ -245,7 +245,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
-**Commit: TBD - fix: improve error handling for API limits and failures**
+**Commit: `eb2e90c` - fix: improve error handling for API limits and failures**
 - Added better error detection and user-friendly messages for Tavily API usage limits
 - Early detection of API limit errors before attempting GPT analysis
 - Check if sufficient data is available before proceeding with analysis
