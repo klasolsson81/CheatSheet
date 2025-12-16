@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Atkinson_Hyperlegible } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 // Atkinson Hyperlegible - optimized for readability (Next.js optimized)
@@ -115,6 +116,7 @@ export default function RootLayout({
     <html lang="en" className={`${atkinson.variable} ${geistMono.variable}`}>
       <body className="font-sans antialiased">
         {children}
+        <Analytics />
       </body>
     </html>
   );

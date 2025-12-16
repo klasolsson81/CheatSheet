@@ -7,6 +7,8 @@
 
 import OpenAI from 'openai';
 import type { ResearchData, AnalysisResult } from '@/lib/types/analysis';
+import { AnalysisResponseSchema } from '@/lib/schemas/analysis';
+import { ZodError } from 'zod';
 
 /**
  * Build language instruction for GPT
@@ -290,31 +292,51 @@ export async function analyzeCompanyWithGPT(
   console.log('📝 GPT response length:', responseContent.length);
   console.log('📝 GPT response preview:', responseContent.slice(0, 500));
 
-  let analysis: AnalysisResult;
+  // Parse JSON first
+  let rawAnalysis: unknown;
   try {
-    analysis = JSON.parse(responseContent);
+    rawAnalysis = JSON.parse(responseContent);
   } catch (parseError) {
     console.error('❌ JSON parse error:', parseError);
     console.error('❌ Raw response:', responseContent);
-    throw new Error('Failed to parse AI response. The response may be malformed.');
+    throw new Error('Failed to parse AI response. The response may be malformed JSON.');
   }
 
-  // Check for NSFW content flag
-  if (analysis.error === 'NSFW_CONTENT') {
-    return {
-      error: 'NSFW_CONTENT',
-      summary: '',
-      ice_breaker: [],
-      pain_points: [],
-      sales_hooks: [],
-      financial_signals: '',
-      company_tone: '',
-    };
+  // Validate with Zod for runtime type safety
+  let analysis: AnalysisResult;
+  try {
+    const validatedAnalysis = AnalysisResponseSchema.parse(rawAnalysis);
+
+    // Check for NSFW content flag
+    if ('error' in validatedAnalysis && validatedAnalysis.error === 'NSFW_CONTENT') {
+      return {
+        error: 'NSFW_CONTENT',
+        summary: '',
+        ice_breaker: [],
+        pain_points: [],
+        sales_hooks: [],
+        financial_signals: '',
+        company_tone: '',
+      };
+    }
+
+    // Type assertion safe because Zod validated it
+    analysis = validatedAnalysis as AnalysisResult;
+  } catch (validationError) {
+    if (validationError instanceof ZodError) {
+      console.error('❌ Zod validation error:', validationError.issues);
+      console.error('❌ Raw analysis:', JSON.stringify(rawAnalysis, null, 2));
+
+      // Provide detailed error message
+      const errorMessages = validationError.issues.map((err) => `${err.path.join('.')}: ${err.message}`).join(', ');
+      throw new Error(`AI response validation failed: ${errorMessages}`);
+    }
+    throw validationError;
   }
 
-  // Validate and fix analysis
+  // Apply fallback for empty ice_breaker array (for personal sites)
   analysis = validateAndFixAnalysis(analysis, url, language);
 
-  console.log('🎉 Analysis complete!');
+  console.log('🎉 Analysis complete with runtime validation!');
   return analysis;
 }

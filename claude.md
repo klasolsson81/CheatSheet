@@ -245,6 +245,39 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
+**Commit: `[PENDING]` - feat: add Zod runtime validation, dev guidelines, and Vercel Analytics**
+- **ZOD RUNTIME VALIDATION (CODE_REVIEW.md #7):**
+  - Installed Zod for runtime type safety
+  - Created `lib/schemas/analysis.ts` with comprehensive schemas:
+    - AnalysisResultSchema, IceBreakerSchema, NSFWErrorSchema
+    - AdvancedSearchParamsSchema, UrlInputSchema, ResearchDataSchema
+  - Integrated Zod validation in `gptService.ts`:
+    - Replaced unsafe JSON.parse() with Zod schema validation
+    - Detailed error messages on validation failure (path + message)
+    - Type-safe parsing with proper error handling
+  - **Benefits:** Runtime safety, better error messages, prevents malformed API responses
+- **DEVELOPMENT GUIDELINES:**
+  - Added comprehensive "Development Guidelines & Architecture" section to CLAUDE.md
+  - Documents modular structure (types, schemas, validators, services, utils, actions)
+  - Module responsibilities clearly defined
+  - Pattern for adding new features (5-step process)
+  - Code quality rules (mandatory + forbidden practices)
+  - Testing strategy and migration patterns
+  - **Purpose:** Ensures future sessions follow same clean architecture
+- **VERCEL ANALYTICS:**
+  - Installed @vercel/analytics package
+  - Integrated Analytics component in app/layout.tsx
+  - Tracks page views, user behavior, and performance metrics
+  - **Benefit:** Data-driven insights for product improvements
+- **FILES CHANGED:**
+  - `lib/schemas/analysis.ts` (new, 126 lines) - Zod schemas
+  - `lib/services/gptService.ts` - Zod integration
+  - `app/layout.tsx` - Analytics component
+  - `claude.md` - Development guidelines section
+  - `package.json` - Dependencies updated
+- **TESTING:** ✅ Build successful, zero errors/warnings
+- **IMPACT:** Addresses CODE_REVIEW.md #7 (High Priority) + establishes coding standards
+
 **Commit: `673cfc0` - refactor: break actions.ts into modular architecture (720→157 lines)**
 - **MAJOR REFACTORING (CODE_REVIEW.md #5):**
   - Broke monolithic `actions.ts` (720 lines) into clean, modular architecture
@@ -630,10 +663,15 @@ git push
   - **Resultat:** Clean architecture, modulär kod, enkel att testa och underhålla
   - **Ref:** CODE_REVIEW.md #5
 
-- [ ] **Type Guards** - Lägg till runtime type validation
+- [x] **Type Guards (Zod)** - ✅ KLAR! Lägg till runtime type validation
   - **Problem:** JSON parsing utan runtime validation (endast TypeScript types)
   - **Risk:** Runtime errors om API returnerar oväntat format
-  - **Lösning:** Använd Zod eller io-ts för JSON schema validation
+  - **Lösning implementerad:**
+    - ✅ Installerat Zod för runtime validation
+    - ✅ Skapat `lib/schemas/analysis.ts` med alla schemas
+    - ✅ Integrerat i `gptService.ts` - ersatt JSON.parse() med Zod parsing
+    - ✅ Detaljerade felmeddelanden vid validation failure
+  - **Resultat:** Runtime type safety, förhindrar malformed API responses
   - **Ref:** CODE_REVIEW.md #7
 
 - [ ] **Process Manipulation** - Ta bort process.emitWarning override
@@ -707,6 +745,193 @@ git push
 - [ ] **Chrome Extension** - Analyze company direkt från LinkedIn/hemsida
 - [ ] **Multi-language** - Support för fler språk (Norska, Danska, Finska)
 - [ ] **API Endpoint** - REST API för integration med CRM-system
+
+---
+
+## 🏗️ Development Guidelines & Architecture
+
+### Modular Structure (Since 2025-12-16)
+
+**The codebase follows a clean, modular architecture. ALWAYS adhere to this structure:**
+
+#### File Organization
+
+```
+app/
+├── actions.ts              # Orchestrator only (keep < 200 lines)
+├── page.tsx                # Main UI component
+├── layout.tsx              # Root layout
+├── translations.ts         # i18n translations
+└── globals.css             # Global styles
+
+lib/
+├── types/
+│   └── analysis.ts         # TypeScript type definitions
+├── schemas/
+│   └── analysis.ts         # Zod runtime validation schemas
+├── validators/
+│   └── urlValidator.ts     # Input sanitization & validation
+├── services/
+│   ├── searchService.ts    # Multi-source research orchestration
+│   └── gptService.ts       # GPT analysis & prompts
+├── utils/
+│   └── swedishCompany.ts   # Swedish company utilities
+└── rateLimit.ts            # Rate limiting logic
+```
+
+#### Module Responsibilities
+
+**1. Types (`lib/types/`)**
+- TypeScript interfaces and type definitions only
+- NO runtime logic
+- Single source of truth for types
+- Export types, never functions
+
+**2. Schemas (`lib/schemas/`)**
+- Zod schemas for runtime validation
+- Complement TypeScript types with runtime checks
+- Use for parsing API responses and user inputs
+- Export schemas AND inferred types
+
+**3. Validators (`lib/validators/`)**
+- Input sanitization (XSS, injection prevention)
+- Format validation (URL, text, params)
+- Security-focused functions
+- Throw errors for invalid inputs
+
+**4. Services (`lib/services/`)**
+- Business logic orchestration
+- API client interactions (OpenAI, Tavily)
+- Data transformation
+- Complex workflows
+
+**5. Utils (`lib/utils/`)**
+- Helper functions
+- Domain-specific logic (e.g., Swedish companies)
+- Reusable utilities
+- No API calls (services handle that)
+
+**6. Actions (`app/actions.ts`)**
+- Server actions only ('use server')
+- Orchestrator pattern - coordinates services
+- Minimal business logic
+- Keep under 200 lines
+
+### When Adding New Features
+
+**ALWAYS follow this pattern:**
+
+1. **Define Types First** (`lib/types/`)
+   ```typescript
+   // lib/types/newFeature.ts
+   export interface NewFeature {
+     id: string;
+     data: string;
+   }
+   ```
+
+2. **Create Zod Schema** (`lib/schemas/`)
+   ```typescript
+   // lib/schemas/newFeature.ts
+   import { z } from 'zod';
+   export const NewFeatureSchema = z.object({
+     id: z.string().uuid(),
+     data: z.string().min(1),
+   });
+   ```
+
+3. **Add Validation if Needed** (`lib/validators/`)
+   ```typescript
+   // lib/validators/newFeatureValidator.ts
+   export function validateNewFeature(input: string): string {
+     // sanitization logic
+   }
+   ```
+
+4. **Implement Service** (`lib/services/`)
+   ```typescript
+   // lib/services/newFeatureService.ts
+   export async function processNewFeature(data: NewFeature) {
+     // business logic
+   }
+   ```
+
+5. **Orchestrate in Actions** (`app/actions.ts`)
+   ```typescript
+   export async function handleNewFeature(input: string) {
+     const validated = validateNewFeature(input);
+     const result = await processNewFeature(validated);
+     return result;
+   }
+   ```
+
+### Code Quality Rules
+
+**Mandatory:**
+- ✅ Every function has JSDoc comments
+- ✅ Export types alongside schemas
+- ✅ Use Zod for all API response parsing
+- ✅ Sanitize all user inputs
+- ✅ Keep files under 400 lines (split if larger)
+- ✅ One responsibility per module (SRP)
+- ✅ No business logic in actions.ts
+
+**Forbidden:**
+- ❌ Putting business logic in actions.ts
+- ❌ Mixing concerns (e.g., validation in services)
+- ❌ Direct JSON.parse() without Zod validation
+- ❌ Unsanitized user inputs
+- ❌ Magic numbers (use named constants)
+- ❌ Files over 500 lines
+
+### Testing Strategy
+
+**Unit Tests** (when implemented):
+- Test validators independently
+- Test services with mocked dependencies
+- Test utils with various inputs
+- Mock Tavily/OpenAI clients
+
+**Integration Tests** (when implemented):
+- Test actions.ts orchestration
+- Test end-to-end flows
+- Mock external APIs
+
+### Migration Pattern
+
+**If you need to modify existing code:**
+
+1. **Extract logic to appropriate module**
+   ```typescript
+   // Before: in actions.ts
+   const result = someComplexLogic(data);
+
+   // After: in lib/services/someService.ts
+   export function processData(data: Data): Result {
+     return someComplexLogic(data);
+   }
+
+   // In actions.ts:
+   const result = processData(data);
+   ```
+
+2. **Add Zod validation for new API responses**
+   ```typescript
+   // Add schema to lib/schemas/
+   // Use in service for parsing
+   const validated = NewSchema.parse(apiResponse);
+   ```
+
+3. **Keep orchestrator thin**
+   - actions.ts should only: validate → call services → return result
+   - NO business logic in actions.ts
+
+### Breaking Changes
+
+**If you break this structure:**
+1. Document WHY in commit message
+2. Update this section with new pattern
+3. Ensure future code follows new pattern
 
 ---
 
