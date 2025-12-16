@@ -245,7 +245,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
-**Commit: TBD - feat: comprehensive responsive design overhaul**
+**Commit: `7e16ef7` - feat: comprehensive responsive design overhaul**
 - Fixed background color inconsistency across devices (white on mobile, black on laptop, dark blue on desktop)
 - Implemented consistent dark blue tech background globally via `body` element in `globals.css`
 - Background now uses: `radial-gradient(ellipse at top, #1e293b, #0f172a, #020617)` across all devices
