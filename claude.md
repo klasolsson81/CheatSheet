@@ -245,7 +245,7 @@ TAVILY_API_KEY=tvly-...      # Tavily API key (search + extraction)
 
 ### 2025-12-16 (Current Session)
 
-**Commit: `[PENDING]` - feat: add personal site support, rate limiting, and TODO backlog**
+**Commit: `2d7c959` - feat: add personal site support, rate limiting, and TODO backlog**
 - **PERSONAL SITE SUPPORT:**
   - Fixed error when analyzing personal portfolios/consultant sites (e.g., klasolsson.se)
   - Added special handling in GPT prompt for personal sites vs companies
