@@ -165,31 +165,30 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-950 to-black text-white overflow-hidden relative">
-      {/* Clean Grid Background Pattern */}
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-950 to-black" />
+    <div className="min-h-screen text-white overflow-hidden relative">
+      {/* Subtle Grid Background Pattern */}
       <div
-        className="fixed inset-0 opacity-[0.08]"
+        className="fixed inset-0 opacity-[0.05]"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(100, 116, 139, 0.4) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(100, 116, 139, 0.4) 1px, transparent 1px)
+            linear-gradient(rgba(100, 116, 139, 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(100, 116, 139, 0.3) 1px, transparent 1px)
           `,
           backgroundSize: '40px 40px',
         }}
       />
 
-      <div className="relative z-10 container mx-auto px-4 py-12 max-w-6xl">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-7xl">
         {/* Language Switcher */}
         {mounted && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="absolute top-8 right-8 flex items-center gap-2 bg-slate-900/80 backdrop-blur-sm rounded-lg p-2 border border-slate-700"
+            className="absolute top-4 right-4 sm:top-8 sm:right-8 flex items-center gap-2 bg-slate-900/80 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 border border-slate-700 shadow-lg"
           >
             <button
               onClick={() => handleLanguageChange('sv')}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-md font-mono text-xs sm:text-sm font-bold transition-all duration-200 ${
                 language === 'sv'
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
                   : 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800'
@@ -201,7 +200,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => handleLanguageChange('en')}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md font-mono text-sm font-bold transition-all duration-200 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-md font-mono text-xs sm:text-sm font-bold transition-all duration-200 ${
                 language === 'en'
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
                   : 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800'
@@ -218,15 +217,15 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-16"
+          className="text-center mb-8 sm:mb-12 lg:mb-16 mt-12 sm:mt-0"
         >
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Radar className="w-7 h-7 text-emerald-500" strokeWidth={2.5} />
-            <h1 className="text-6xl font-bold tracking-widest text-white font-mono">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <Radar className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-500" strokeWidth={2.5} />
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-widest text-white font-mono">
               {t.title}
             </h1>
           </div>
-          <p className="text-slate-400 text-sm font-mono tracking-wide uppercase">
+          <p className="text-slate-400 text-xs sm:text-sm font-mono tracking-wide uppercase px-4">
             {t.subtitle}
           </p>
         </motion.div>
@@ -237,24 +236,26 @@ export default function Home() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
           onSubmit={handleAnalyze}
-          className="mb-16"
+          className="mb-8 sm:mb-12 lg:mb-16"
         >
           <div className="relative max-w-4xl mx-auto">
             {/* Tactical Input Container */}
-            <div className="flex items-center bg-black/60 backdrop-blur-sm rounded-lg border border-slate-800 overflow-hidden h-14 focus-within:border-white transition-all duration-200">
-              <Search className="ml-5 w-5 h-5 text-slate-500" />
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder={t.inputPlaceholder}
-                className="flex-1 bg-transparent px-4 py-4 text-base text-white placeholder-slate-600 outline-none font-mono tracking-wide"
-                disabled={loading}
-              />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center bg-black/60 backdrop-blur-sm rounded-lg border border-slate-800 overflow-hidden focus-within:border-emerald-500 transition-all duration-200 shadow-lg">
+              <div className="flex items-center flex-1">
+                <Search className="ml-4 sm:ml-5 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder={t.inputPlaceholder}
+                  className="flex-1 bg-transparent px-3 sm:px-4 py-4 text-sm sm:text-base text-white placeholder-slate-600 outline-none font-mono tracking-wide"
+                  disabled={loading}
+                />
+              </div>
               <button
                 type="submit"
                 disabled={loading || !url.trim()}
-                className="m-1.5 px-8 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:cursor-not-allowed rounded-md font-mono text-sm font-bold tracking-wider uppercase transition-all duration-200"
+                className="m-2 sm:m-1.5 px-6 sm:px-8 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:cursor-not-allowed rounded-md font-mono text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-200 shadow-lg hover:shadow-emerald-500/50"
               >
                 {loading ? t.analyzingButton : t.executeButton}
               </button>
@@ -282,12 +283,12 @@ export default function Home() {
                   transition={{ duration: 0.3 }}
                   className="relative z-10 mt-6 overflow-hidden"
                 >
-                  <div className="bg-black/60 backdrop-blur-sm border border-slate-800 rounded-lg p-6 space-y-4">
-                    <p className="text-xs text-slate-500 mb-4 font-mono tracking-wide uppercase">
+                  <div className="bg-black/60 backdrop-blur-sm border border-slate-800 rounded-lg p-4 sm:p-6 space-y-4">
+                    <p className="text-xs text-slate-500 mb-4 font-mono tracking-wide uppercase leading-relaxed">
                       {t.advancedDescription}
                     </p>
 
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {/* Contact Person */}
                       <div>
                         <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
@@ -298,7 +299,7 @@ export default function Home() {
                           value={contactPerson}
                           onChange={(e) => setContactPerson(e.target.value)}
                           placeholder={t.contactPersonPlaceholder}
-                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
@@ -313,7 +314,7 @@ export default function Home() {
                           value={jobTitle}
                           onChange={(e) => setJobTitle(e.target.value)}
                           placeholder={t.jobTitlePlaceholder}
-                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
@@ -328,7 +329,7 @@ export default function Home() {
                           value={department}
                           onChange={(e) => setDepartment(e.target.value)}
                           placeholder={t.departmentPlaceholder}
-                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
@@ -343,13 +344,13 @@ export default function Home() {
                           value={location}
                           onChange={(e) => setLocation(e.target.value)}
                           placeholder={t.locationPlaceholder}
-                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
 
                       {/* Specific Focus */}
-                      <div className="md:col-span-2">
+                      <div className="sm:col-span-2">
                         <label className="block text-xs font-mono text-slate-400 mb-2 tracking-wider uppercase">
                           {t.specificFocusLabel}
                         </label>
@@ -358,7 +359,7 @@ export default function Home() {
                           value={specificFocus}
                           onChange={(e) => setSpecificFocus(e.target.value)}
                           placeholder={t.specificFocusPlaceholder}
-                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-white transition-all font-mono"
+                          className="w-full bg-black/40 border border-slate-700 rounded-md px-3 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-emerald-500 transition-all font-mono"
                           disabled={loading}
                         />
                       </div>
@@ -416,26 +417,26 @@ export default function Home() {
               initial="hidden"
               animate="visible"
               exit="hidden"
-              className="space-y-8"
+              className="space-y-6 sm:space-y-8"
             >
               {/* Ice Breakers */}
               <motion.div variants={cardVariants}>
-                <div className="bg-slate-900 bg-blue-950/30 rounded-xl shadow-lg border-l-4 border-blue-500 p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-400">
-                  <div className="flex items-center gap-4 mb-6">
-                    <MessageSquare className="w-7 h-7 text-blue-400" strokeWidth={2} />
-                    <h2 className="text-2xl font-bold text-blue-400 font-mono tracking-wider uppercase">
+                <div className="bg-slate-900/80 bg-blue-950/30 rounded-xl shadow-lg border-l-4 border-blue-500 p-5 sm:p-6 lg:p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.01] sm:hover:scale-[1.02] hover:-translate-y-1 hover:border-blue-400">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                    <MessageSquare className="w-6 h-6 sm:w-7 sm:h-7 text-blue-400 flex-shrink-0" strokeWidth={2} />
+                    <h2 className="text-xl sm:text-2xl font-bold text-blue-400 font-mono tracking-wider uppercase">
                       {t.iceBreakersTitle}
                     </h2>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {result.ice_breaker.map((breaker, idx) => {
                       const hasSource = breaker.source_url && breaker.source_url.trim() !== '';
                       const content = (
-                        <div className="flex items-start gap-3">
-                          <span className="text-blue-400 font-mono font-bold text-sm mt-0.5">#{idx + 1}</span>
-                          <p className="text-base text-slate-200 leading-relaxed font-sans flex-1">{breaker.text}</p>
+                        <div className="flex items-start gap-2 sm:gap-3">
+                          <span className="text-blue-400 font-mono font-bold text-xs sm:text-sm mt-0.5 flex-shrink-0">#{idx + 1}</span>
+                          <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-sans flex-1">{breaker.text}</p>
                           {hasSource && (
-                            <ExternalLink className="w-4 h-4 text-blue-400 flex-shrink-0 mt-1" />
+                            <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400 flex-shrink-0 mt-1" />
                           )}
                         </div>
                       );
@@ -446,14 +447,14 @@ export default function Home() {
                           href={breaker.source_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block p-4 bg-blue-950/20 rounded-lg border border-blue-800/30 hover:bg-blue-900/30 hover:border-blue-600/50 transition-all duration-200 cursor-pointer"
+                          className="block p-3 sm:p-4 bg-blue-950/20 rounded-lg border border-blue-800/30 hover:bg-blue-900/30 hover:border-blue-600/50 transition-all duration-200 cursor-pointer"
                         >
                           {content}
                         </a>
                       ) : (
                         <div
                           key={idx}
-                          className="p-4 bg-blue-950/20 rounded-lg border border-blue-800/30"
+                          className="p-3 sm:p-4 bg-blue-950/20 rounded-lg border border-blue-800/30"
                         >
                           {content}
                         </div>
@@ -465,28 +466,28 @@ export default function Home() {
 
               {/* Company Overview */}
               <motion.div variants={cardVariants}>
-                <div className="bg-slate-900 rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-slate-500/20 hover:scale-[1.02] hover:-translate-y-1 cursor-pointer">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Target className="w-6 h-6 text-slate-400" strokeWidth={2} />
-                    <h3 className="text-lg font-bold text-white font-mono tracking-wider uppercase">{t.companyOverviewTitle}</h3>
+                <div className="bg-slate-900/80 rounded-xl shadow-lg p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-slate-500/20 hover:scale-[1.01] sm:hover:scale-[1.02] hover:-translate-y-1 cursor-pointer">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <Target className="w-5 h-5 sm:w-6 sm:h-6 text-slate-400 flex-shrink-0" strokeWidth={2} />
+                    <h3 className="text-base sm:text-lg font-bold text-white font-mono tracking-wider uppercase">{t.companyOverviewTitle}</h3>
                   </div>
-                  <p className="text-base text-slate-200 leading-relaxed font-sans">{result.summary}</p>
+                  <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-sans">{result.summary}</p>
                 </div>
               </motion.div>
 
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                 {/* Sales Hooks */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900 bg-green-950/30 rounded-xl shadow-lg border-l-4 border-green-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-green-400 cursor-pointer">
-                    <div className="flex items-center gap-3 mb-4">
-                      <TrendingUp className="w-6 h-6 text-green-400" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-green-400 font-mono tracking-wider uppercase">{t.salesHooksTitle}</h3>
+                  <div className="bg-slate-900/80 bg-green-950/30 rounded-xl shadow-lg border-l-4 border-green-500 p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-green-500/20 hover:scale-[1.01] sm:hover:scale-[1.02] hover:-translate-y-1 hover:border-green-400 cursor-pointer h-full">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-400 flex-shrink-0" strokeWidth={2} />
+                      <h3 className="text-base sm:text-lg font-bold text-green-400 font-mono tracking-wider uppercase">{t.salesHooksTitle}</h3>
                     </div>
-                    <ul className="space-y-3">
+                    <ul className="space-y-2.5 sm:space-y-3">
                       {result.sales_hooks.map((hook, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
+                        <li key={idx} className="flex items-start gap-2 sm:gap-3">
                           <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0" />
-                          <span className="text-base text-slate-200 leading-relaxed font-sans">{hook}</span>
+                          <span className="text-sm sm:text-base text-slate-200 leading-relaxed font-sans">{hook}</span>
                         </li>
                       ))}
                     </ul>
@@ -495,16 +496,16 @@ export default function Home() {
 
                 {/* Pain Points */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900 bg-red-950/30 rounded-xl shadow-lg border-l-4 border-red-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-red-400 cursor-pointer">
-                    <div className="flex items-center gap-3 mb-4">
-                      <AlertTriangle className="w-6 h-6 text-red-400" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-red-400 font-mono tracking-wider uppercase">{t.painPointsTitle}</h3>
+                  <div className="bg-slate-900/80 bg-red-950/30 rounded-xl shadow-lg border-l-4 border-red-500 p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/20 hover:scale-[1.01] sm:hover:scale-[1.02] hover:-translate-y-1 hover:border-red-400 cursor-pointer h-full">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-400 flex-shrink-0" strokeWidth={2} />
+                      <h3 className="text-base sm:text-lg font-bold text-red-400 font-mono tracking-wider uppercase">{t.painPointsTitle}</h3>
                     </div>
-                    <ul className="space-y-3">
+                    <ul className="space-y-2.5 sm:space-y-3">
                       {result.pain_points.map((point, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-base text-slate-200 leading-relaxed font-sans">{point}</span>
+                        <li key={idx} className="flex items-start gap-2 sm:gap-3">
+                          <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm sm:text-base text-slate-200 leading-relaxed font-sans">{point}</span>
                         </li>
                       ))}
                     </ul>
@@ -512,26 +513,26 @@ export default function Home() {
                 </motion.div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                 {/* Financial Signals */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900 rounded-xl shadow-lg border-l-4 border-purple-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-purple-400 cursor-pointer">
-                    <div className="flex items-center gap-3 mb-3">
-                      <DollarSign className="w-6 h-6 text-purple-400" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">{t.financialSignalsTitle}</h3>
+                  <div className="bg-slate-900/80 rounded-xl shadow-lg border-l-4 border-purple-500 p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.01] sm:hover:scale-[1.02] hover:-translate-y-1 hover:border-purple-400 cursor-pointer h-full">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400 flex-shrink-0" strokeWidth={2} />
+                      <h3 className="text-base sm:text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">{t.financialSignalsTitle}</h3>
                     </div>
-                    <p className="text-base text-slate-200 leading-relaxed font-sans">{result.financial_signals}</p>
+                    <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-sans">{result.financial_signals}</p>
                   </div>
                 </motion.div>
 
                 {/* Company Tone */}
                 <motion.div variants={cardVariants}>
-                  <div className="bg-slate-900 rounded-xl shadow-lg border-l-4 border-purple-500 p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02] hover:-translate-y-1 hover:border-purple-400 cursor-pointer">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Activity className="w-6 h-6 text-purple-400" strokeWidth={2} />
-                      <h3 className="text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">{t.companyToneTitle}</h3>
+                  <div className="bg-slate-900/80 rounded-xl shadow-lg border-l-4 border-purple-500 p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.01] sm:hover:scale-[1.02] hover:-translate-y-1 hover:border-purple-400 cursor-pointer h-full">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400 flex-shrink-0" strokeWidth={2} />
+                      <h3 className="text-base sm:text-lg font-bold text-purple-400 font-mono tracking-wider uppercase">{t.companyToneTitle}</h3>
                     </div>
-                    <p className="text-base text-slate-200 leading-relaxed font-sans">{result.company_tone}</p>
+                    <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-sans">{result.company_tone}</p>
                   </div>
                 </motion.div>
               </div>
@@ -540,8 +541,8 @@ export default function Home() {
         </AnimatePresence>
 
         {/* Footer */}
-        <footer className="mt-20 pt-8 border-t border-slate-800">
-          <p className="text-center text-xs text-slate-500 font-mono tracking-wider uppercase">
+        <footer className="mt-12 sm:mt-16 lg:mt-20 pt-6 sm:pt-8 border-t border-slate-800">
+          <p className="text-center text-xs text-slate-500 font-mono tracking-wider uppercase px-4">
             {t.footerStatus}
           </p>
         </footer>
