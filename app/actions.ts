@@ -38,18 +38,61 @@ interface ResearchData {
   signals: string;
 }
 
+// URL Validation and Sanitization
+function sanitizeUrl(input: string): string {
+  // Remove any non-printable characters and excessive whitespace
+  const cleaned = input.trim().replace(/[\x00-\x1F\x7F]/g, '');
+
+  // Limit length to prevent abuse
+  const MAX_URL_LENGTH = 500;
+  if (cleaned.length > MAX_URL_LENGTH) {
+    throw new Error(`URL too long. Maximum length is ${MAX_URL_LENGTH} characters.`);
+  }
+
+  if (!cleaned) {
+    throw new Error('URL cannot be empty.');
+  }
+
+  // Block dangerous patterns
+  const dangerousPatterns = [
+    /javascript:/i,
+    /data:/i,
+    /vbscript:/i,
+    /file:/i,
+    /about:/i,
+    /<script/i,
+    /on\w+=/i, // onclick, onerror, etc.
+  ];
+
+  for (const pattern of dangerousPatterns) {
+    if (pattern.test(cleaned)) {
+      throw new Error('Invalid URL format. Please provide a valid HTTP/HTTPS URL.');
+    }
+  }
+
+  return cleaned;
+}
+
 // URL Normalization - adds https:// if missing
 function normalizeUrl(url: string): string {
-  const trimmed = url.trim();
-  if (!trimmed) return '';
+  // First sanitize the input
+  const sanitized = sanitizeUrl(url);
 
   // Check if URL already has a protocol
-  if (trimmed.match(/^https?:\/\//i)) {
-    return trimmed;
+  if (sanitized.match(/^https?:\/\//i)) {
+    return sanitized;
   }
 
   // Add https:// prefix
-  return `https://${trimmed}`;
+  const normalized = `https://${sanitized}`;
+
+  // Validate final URL format
+  try {
+    new URL(normalized);
+    return normalized;
+  } catch {
+    throw new Error('Invalid URL format. Please provide a valid domain or URL.');
+  }
 }
 
 // Detect if Swedish company (.se domain)
@@ -197,6 +240,41 @@ interface AdvancedSearchParams {
   specificFocus?: string;
 }
 
+// Sanitize text input to prevent prompt injection
+function sanitizeTextInput(input: string, maxLength: number = 200): string {
+  if (!input) return '';
+
+  // Remove non-printable characters
+  let cleaned = input.trim().replace(/[\x00-\x1F\x7F]/g, '');
+
+  // Limit length
+  if (cleaned.length > maxLength) {
+    cleaned = cleaned.slice(0, maxLength);
+  }
+
+  // Remove potential prompt injection patterns
+  const dangerousPatterns = [
+    /ignore\s+(previous|all)\s+instructions/i,
+    /forget\s+everything/i,
+    /system\s*:/i,
+    /assistant\s*:/i,
+    /<\|im_start\|>/i,
+    /<\|im_end\|>/i,
+    /```/g, // Remove code blocks
+  ];
+
+  for (const pattern of dangerousPatterns) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+
+  // Escape special characters that could break JSON or prompts
+  cleaned = cleaned
+    .replace(/[<>]/g, '') // Remove angle brackets
+    .replace(/["'`]/g, match => `\\${match}`); // Escape quotes
+
+  return cleaned;
+}
+
 export async function analyzeUrl(
   inputUrl: string,
   advancedParams?: AdvancedSearchParams,
@@ -217,6 +295,15 @@ export async function analyzeUrl(
   if (!url) {
     throw new Error('Please enter a valid URL.');
   }
+
+  // Sanitize advanced parameters to prevent prompt injection
+  const sanitizedParams = advancedParams ? {
+    contactPerson: sanitizeTextInput(advancedParams.contactPerson || '', 150),
+    department: sanitizeTextInput(advancedParams.department || '', 100),
+    location: sanitizeTextInput(advancedParams.location || '', 100),
+    jobTitle: sanitizeTextInput(advancedParams.jobTitle || '', 100),
+    specificFocus: sanitizeTextInput(advancedParams.specificFocus || '', 300),
+  } : undefined;
 
   // Initialize clients
   const openai = new OpenAI({
@@ -277,12 +364,12 @@ export async function analyzeUrl(
     }
 
     // Build targeted search queries based on advanced parameters
-    const hasAdvanced = advancedParams && Object.keys(advancedParams).length > 0;
+    const hasAdvanced = sanitizedParams && Object.keys(sanitizedParams).length > 0;
     const targetContext = hasAdvanced ? [
-      advancedParams.contactPerson,
-      advancedParams.jobTitle,
-      advancedParams.department,
-      advancedParams.location,
+      sanitizedParams.contactPerson,
+      sanitizedParams.jobTitle,
+      sanitizedParams.department,
+      sanitizedParams.location,
     ].filter(Boolean).join(' ') : '';
 
     // STEP 3: MULTI-SOURCE PARALLEL RESEARCH ENGINE
@@ -292,8 +379,8 @@ export async function analyzeUrl(
 
       // 2. Leadership & Key People Research (ENHANCED with advanced params)
       tavilyClient.search(
-        hasAdvanced && advancedParams.contactPerson
-          ? `${advancedParams.contactPerson} ${companyName} LinkedIn ${advancedParams.location || ''} ${advancedParams.jobTitle || ''} 2025`
+        hasAdvanced && sanitizedParams.contactPerson
+          ? `${sanitizedParams.contactPerson} ${companyName} LinkedIn ${sanitizedParams.location || ''} ${sanitizedParams.jobTitle || ''} 2025`
           : `${companyName} ${targetContext} CEO founder leadership team LinkedIn 2025`,
         {
           maxResults: 4,
@@ -306,8 +393,8 @@ export async function analyzeUrl(
 
       // 3. Social Media & Personal Activity (ENHANCED for targeted search)
       tavilyClient.search(
-        hasAdvanced && advancedParams.contactPerson
-          ? `${advancedParams.contactPerson} LinkedIn post ${advancedParams.specificFocus || ''} ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`
+        hasAdvanced && sanitizedParams.contactPerson
+          ? `${sanitizedParams.contactPerson} LinkedIn post ${sanitizedParams.specificFocus || ''} ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`
           : `${companyName} ${targetContext} LinkedIn post recent ${new Date().getMonth() < 6 ? 'January February March April May' : 'June July August September October November December'} 2025`,
         {
           maxResults: 5, // Reduced from 10 to 5 for faster performance
@@ -494,11 +581,11 @@ Use the multi-source research below. Prioritize RECENT, SPECIFIC insights over g
     // Build advanced search context for prompt
     const advancedContext = hasAdvanced
       ? `\n\n🎯 TARGETED SEARCH - Focus your analysis on:
-${advancedParams.contactPerson ? `- Contact Person: ${advancedParams.contactPerson}` : ''}
-${advancedParams.jobTitle ? `- Job Title: ${advancedParams.jobTitle}` : ''}
-${advancedParams.department ? `- Department: ${advancedParams.department}` : ''}
-${advancedParams.location ? `- Location: ${advancedParams.location}` : ''}
-${advancedParams.specificFocus ? `- Focus Area: ${advancedParams.specificFocus}` : ''}
+${sanitizedParams.contactPerson ? `- Contact Person: ${sanitizedParams.contactPerson}` : ''}
+${sanitizedParams.jobTitle ? `- Job Title: ${sanitizedParams.jobTitle}` : ''}
+${sanitizedParams.department ? `- Department: ${sanitizedParams.department}` : ''}
+${sanitizedParams.location ? `- Location: ${sanitizedParams.location}` : ''}
+${sanitizedParams.specificFocus ? `- Focus Area: ${sanitizedParams.specificFocus}` : ''}
 
 IMPORTANT: Tailor the ice breaker, pain points, and sales hooks specifically for this person/department/location within the larger organization.`
       : '';
