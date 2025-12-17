@@ -39,57 +39,22 @@ export class SerperSearchProvider extends BaseSearchProvider {
 
   /**
    * Check if Serper is available
+   *
+   * Note: This is a lightweight check that doesn't make API calls.
+   * Actual availability is determined by trying the search request.
+   * This saves API quota by avoiding unnecessary test searches.
    */
   async isAvailable(): Promise<HealthCheckResult> {
-    if (!process.env.SERPER_API_KEY) {
+    if (!this.apiKey || !process.env.SERPER_API_KEY) {
       return {
         healthy: false,
         message: 'SERPER_API_KEY not configured',
       };
     }
 
-    // Simple health check
-    try {
-      const response = await fetch(this.baseUrl, {
-        method: 'POST',
-        headers: {
-          'X-API-KEY': this.apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          q: 'test',
-          num: 1,
-        }),
-      });
-
-      if (response.status === 401) {
-        return {
-          healthy: false,
-          message: 'Invalid Serper API key',
-        };
-      }
-
-      if (response.status === 429) {
-        return {
-          healthy: false,
-          message: 'Serper rate limit exceeded',
-        };
-      }
-
-      if (!response.ok) {
-        return {
-          healthy: false,
-          message: `Serper HTTP ${response.status}`,
-        };
-      }
-
-      return { healthy: true };
-    } catch (error) {
-      return {
-        healthy: false,
-        message: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
+    // Assume healthy if API key exists
+    // Actual failures will be caught during search attempts
+    return { healthy: true };
   }
 
   /**

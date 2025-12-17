@@ -25,12 +25,23 @@ interface ProviderStats {
 }
 
 /**
+ * Health check cache entry
+ */
+interface HealthCacheEntry {
+  healthy: boolean;
+  expiry: number;
+  message?: string;
+}
+
+/**
  * Search orchestrator singleton
  */
 class SearchOrchestrator {
   private providers: BaseSearchProvider[] = [];
   private stats: Map<string, ProviderStats> = new Map();
+  private healthCache: Map<string, HealthCacheEntry> = new Map();
   private initialized = false;
+  private readonly HEALTH_CACHE_TTL = 300000; // 5 minutes in milliseconds
 
   /**
    * Initialize all available providers
@@ -141,10 +152,49 @@ class SearchOrchestrator {
   }
 
   /**
+   * Check if provider is healthy (with caching)
+   *
+   * @param provider - Provider to check
+   * @returns True if healthy, false otherwise
+   */
+  private async isProviderHealthy(provider: BaseSearchProvider): Promise<{ healthy: boolean; message?: string }> {
+    const providerName = provider.getName();
+    const now = Date.now();
+
+    // Check cache first
+    const cached = this.healthCache.get(providerName);
+    if (cached && cached.expiry > now) {
+      logger.info(`Using cached health status for ${providerName}`, {
+        healthy: cached.healthy,
+        cacheAge: Math.round((now - (cached.expiry - this.HEALTH_CACHE_TTL)) / 1000) + 's',
+      });
+      return { healthy: cached.healthy, message: cached.message };
+    }
+
+    // Cache miss - check health
+    const health = await provider.isAvailable();
+
+    // Cache result
+    this.healthCache.set(providerName, {
+      healthy: health.healthy,
+      expiry: now + this.HEALTH_CACHE_TTL,
+      message: health.message,
+    });
+
+    logger.info(`Health check completed for ${providerName}`, {
+      healthy: health.healthy,
+      cached: false,
+    });
+
+    return health;
+  }
+
+  /**
    * Search with automatic fallback
    *
    * Tries providers in priority order until one succeeds.
-   * Logs detailed information about which provider was used.
+   * Uses cached health checks to avoid unnecessary API calls.
+   * Falls back to next provider on failure.
    *
    * @param query - Search query
    * @param options - Search options
@@ -158,19 +208,24 @@ class SearchOrchestrator {
 
     for (const provider of this.providers) {
       try {
-        // Check if provider is healthy before attempting search
-        const health = await provider.isAvailable();
+        // Check cached health first (avoid unnecessary API calls)
+        const health = await this.isProviderHealthy(provider);
 
         if (!health.healthy) {
           const message = `${provider.getName()} unavailable: ${health.message}`;
-          logger.warn(message);
+          logger.info(message);
           errors.push({ provider: provider.getName(), error: health.message || 'Unhealthy' });
-          this.updateStats(provider.getName(), false, health.message);
           continue;
         }
 
         // Attempt search
         const result = await provider.search(query, options);
+
+        // Mark as healthy on success
+        this.healthCache.set(provider.getName(), {
+          healthy: true,
+          expiry: Date.now() + this.HEALTH_CACHE_TTL,
+        });
 
         // Update stats and log success
         this.updateStats(provider.getName(), true);
@@ -183,6 +238,14 @@ class SearchOrchestrator {
         return result;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
+
+        // Mark as unhealthy on failure
+        this.healthCache.set(provider.getName(), {
+          healthy: false,
+          expiry: Date.now() + this.HEALTH_CACHE_TTL,
+          message: errorMessage,
+        });
+
         logger.warn(`${provider.getName()} search failed, trying next provider`, {
           provider: provider.getName(),
           error: errorMessage,

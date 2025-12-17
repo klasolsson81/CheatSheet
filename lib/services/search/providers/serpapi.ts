@@ -40,53 +40,22 @@ export class SerpApiSearchProvider extends BaseSearchProvider {
 
   /**
    * Check if SerpAPI is available
+   *
+   * Note: This is a lightweight check that doesn't make API calls.
+   * Actual availability is determined by trying the search request.
+   * This improves performance by avoiding extra network round trips.
    */
   async isAvailable(): Promise<HealthCheckResult> {
-    if (!process.env.SERPAPI_API_KEY) {
+    if (!this.apiKey || !process.env.SERPAPI_API_KEY) {
       return {
         healthy: false,
         message: 'SERPAPI_API_KEY not configured',
       };
     }
 
-    // Simple health check using account endpoint
-    try {
-      const url = new URL('https://serpapi.com/account');
-      url.searchParams.set('api_key', this.apiKey);
-
-      const response = await fetch(url.toString());
-
-      if (response.status === 401) {
-        return {
-          healthy: false,
-          message: 'Invalid SerpAPI key',
-        };
-      }
-
-      if (!response.ok) {
-        return {
-          healthy: false,
-          message: `SerpAPI HTTP ${response.status}`,
-        };
-      }
-
-      const data = await response.json();
-
-      // Check if searches are available
-      if (data.plan_searches_left !== undefined && data.plan_searches_left <= 0) {
-        return {
-          healthy: false,
-          message: 'SerpAPI searches exhausted',
-        };
-      }
-
-      return { healthy: true };
-    } catch (error) {
-      return {
-        healthy: false,
-        message: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
+    // Assume healthy if API key exists
+    // Actual failures will be caught during search attempts
+    return { healthy: true };
   }
 
   /**

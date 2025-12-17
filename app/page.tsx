@@ -60,6 +60,14 @@ interface AnalysisResult {
   error?: string;
 }
 
+interface AdvancedSearchParams {
+  contactPerson?: string;
+  department?: string;
+  location?: string;
+  jobTitle?: string;
+  specificFocus?: string;
+}
+
 export default function Home() {
   // Language State
   const [language, setLanguage] = useState<Language>('en');
@@ -114,14 +122,17 @@ export default function Home() {
 
     try {
       // Build advanced search parameters (only include non-empty fields)
-      const advancedParams: any = {};
-      if (contactPerson.trim()) advancedParams.contactPerson = contactPerson.trim();
-      if (department.trim()) advancedParams.department = department.trim();
-      if (location.trim()) advancedParams.location = location.trim();
-      if (jobTitle.trim()) advancedParams.jobTitle = jobTitle.trim();
-      if (specificFocus.trim()) advancedParams.specificFocus = specificFocus.trim();
+      const advancedParams: AdvancedSearchParams = {
+        ...(contactPerson.trim() && { contactPerson: contactPerson.trim() }),
+        ...(department.trim() && { department: department.trim() }),
+        ...(location.trim() && { location: location.trim() }),
+        ...(jobTitle.trim() && { jobTitle: jobTitle.trim() }),
+        ...(specificFocus.trim() && { specificFocus: specificFocus.trim() }),
+      };
 
-      const analysis = await analyzeUrl(url, advancedParams, language);
+      // Only pass params if at least one field is set
+      const hasParams = Object.keys(advancedParams).length > 0;
+      const analysis = await analyzeUrl(url, hasParams ? advancedParams : undefined, language);
 
       // Check for NSFW content flag
       if (analysis.error === 'NSFW_CONTENT') {

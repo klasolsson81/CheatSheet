@@ -38,58 +38,22 @@ export class BraveSearchProvider extends BaseSearchProvider {
 
   /**
    * Check if Brave Search is available
+   *
+   * Note: This is a lightweight check that doesn't make API calls.
+   * Actual availability is determined by trying the search request.
+   * This saves API quota by avoiding unnecessary test searches.
    */
   async isAvailable(): Promise<HealthCheckResult> {
-    if (!process.env.BRAVE_API_KEY) {
+    if (!this.apiKey || !process.env.BRAVE_API_KEY) {
       return {
         healthy: false,
         message: 'BRAVE_API_KEY not configured',
       };
     }
 
-    // Simple health check
-    try {
-      const url = new URL(this.baseUrl);
-      url.searchParams.set('q', 'test');
-      url.searchParams.set('count', '1');
-
-      const response = await fetch(url.toString(), {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Accept-Encoding': 'gzip',
-          'X-Subscription-Token': this.apiKey,
-        },
-      });
-
-      if (response.status === 401) {
-        return {
-          healthy: false,
-          message: 'Invalid Brave API key',
-        };
-      }
-
-      if (response.status === 429) {
-        return {
-          healthy: false,
-          message: 'Brave rate limit exceeded',
-        };
-      }
-
-      if (!response.ok) {
-        return {
-          healthy: false,
-          message: `Brave HTTP ${response.status}`,
-        };
-      }
-
-      return { healthy: true };
-    } catch (error) {
-      return {
-        healthy: false,
-        message: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
+    // Assume healthy if API key exists
+    // Actual failures will be caught during search attempts
+    return { healthy: true };
   }
 
   /**
