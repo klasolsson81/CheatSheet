@@ -3,7 +3,13 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(npm install:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: comprehensive responsive design overhaul and background fix\n\nFixed background color inconsistency and implemented modern mobile-first responsive design.\n\n## Major Changes:\n- Fixed background inconsistency (white on mobile, black on laptop, dark blue on desktop)\n- Implemented global dark blue tech background in globals.css\n- Complete responsive redesign using Tailwind breakpoints (mobile-first)\n- Fixed ice breaker section to show 2-3 numbered options consistently across all devices\n\n## Technical Details:\n- Removed conflicting CSS variables and media queries from globals.css\n- Added radial gradient background to body: #1e293b → #0f172a → #020617\n- Updated all components with responsive spacing (p-5 sm:p-6 lg:p-8)\n- Implemented responsive typography (text-sm sm:text-base throughout)\n- Updated all grids to grid-cols-1 md:grid-cols-2\n- Changed focus states from white to emerald-500\n- Added responsive icon sizing (w-5 h-5 sm:w-6 sm:h-6)\n- Optimized mobile forms (vertical stack on small screens)\n- Reduced hover effects on mobile for better touch experience\n- Added screenshots in allscreens/ folder for reference\n\n## Files Modified:\n- app/globals.css: Global background and font configuration\n- app/page.tsx: All responsive breakpoints and spacing\n- CLAUDE.md: Updated documentation with 2025-12-16 changes\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)",
+      "Bash(git commit:*)",
+      "Bash(ls:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:coverage:*)"
     ]
   }
 }

@@ -44,7 +44,7 @@ Built for sales professionals who need to quickly understand prospects and craft
 
 - **Extracts** website content and company information
 - **Aggregates** data from 6 parallel sources (leadership, social media, news, financials, growth signals)
-- **Analyzes** with GPT-4o to generate targeted sales intelligence
+- **Analyzes** with GPT-5.2 to generate targeted sales intelligence
 - **Delivers** actionable ice breakers, pain points, and sales hooks
 
 ### Who It's For
@@ -108,7 +108,7 @@ Built for sales professionals who need to quickly understand prospects and craft
 - **[Lucide React](https://lucide.dev/)** - Icon library
 
 ### Backend & AI
-- **[OpenAI GPT-4o](https://openai.com/)** - Advanced language model
+- **[OpenAI GPT-5.2](https://openai.com/)** - Advanced language model
 - **[Tavily API](https://tavily.com/)** - Primary search + content extraction
 - **Multi-Provider Search** - Fallback to Serper, Brave, SerpAPI
 
@@ -492,7 +492,7 @@ All code, architecture, features, optimizations, and improvements (including 5 c
 
 **Private/Proprietary**
 
-Copyright © 2024 Klas Olsson. All rights reserved.
+Copyright © 2025 Klas Olsson. All rights reserved.
 
 This project is private and not licensed for public use, modification, or distribution.
 
