@@ -39,22 +39,9 @@ export class SerperSearchProvider extends BaseSearchProvider {
 
   /**
    * Check if Serper is available
-   *
-   * Note: This is a lightweight check that doesn't make API calls.
-   * Actual availability is determined by trying the search request.
-   * This saves API quota by avoiding unnecessary test searches.
    */
   async isAvailable(): Promise<HealthCheckResult> {
-    if (!this.apiKey || !process.env.SERPER_API_KEY) {
-      return {
-        healthy: false,
-        message: 'SERPER_API_KEY not configured',
-      };
-    }
-
-    // Assume healthy if API key exists
-    // Actual failures will be caught during search attempts
-    return { healthy: true };
+    return this.basicHealthCheck(this.apiKey, 'SERPER_API_KEY');
   }
 
   /**

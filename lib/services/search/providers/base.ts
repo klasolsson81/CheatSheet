@@ -73,6 +73,30 @@ export abstract class BaseSearchProvider {
   abstract isAvailable(): Promise<HealthCheckResult>;
 
   /**
+   * Basic health check that verifies API key exists
+   *
+   * This is a lightweight check that doesn't make API calls.
+   * Actual availability is determined by trying the search request.
+   * This saves API quota by avoiding unnecessary test searches.
+   *
+   * @param apiKey - The API key to check
+   * @param envVarName - Name of the environment variable (for error message)
+   * @returns Health check result
+   */
+  protected basicHealthCheck(apiKey: string | undefined, envVarName: string): HealthCheckResult {
+    if (!apiKey || !process.env[envVarName]) {
+      return {
+        healthy: false,
+        message: `${envVarName} not configured`,
+      };
+    }
+
+    // Assume healthy if API key exists
+    // Actual failures will be caught during search attempts
+    return { healthy: true };
+  }
+
+  /**
    * Perform search query
    *
    * @param query - Search query string

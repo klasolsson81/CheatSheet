@@ -31,9 +31,13 @@ interface LogEntry {
 
 /**
  * Format log entry as JSON string
+ *
+ * Pretty-printed in development, single-line in production
+ * for better compatibility with log aggregation tools.
  */
 function formatLogEntry(entry: LogEntry): string {
-  return JSON.stringify(entry, null, 2);
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  return isDevelopment ? JSON.stringify(entry, null, 2) : JSON.stringify(entry);
 }
 
 /**

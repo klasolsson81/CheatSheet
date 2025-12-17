@@ -40,22 +40,9 @@ export class SerpApiSearchProvider extends BaseSearchProvider {
 
   /**
    * Check if SerpAPI is available
-   *
-   * Note: This is a lightweight check that doesn't make API calls.
-   * Actual availability is determined by trying the search request.
-   * This improves performance by avoiding extra network round trips.
    */
   async isAvailable(): Promise<HealthCheckResult> {
-    if (!this.apiKey || !process.env.SERPAPI_API_KEY) {
-      return {
-        healthy: false,
-        message: 'SERPAPI_API_KEY not configured',
-      };
-    }
-
-    // Assume healthy if API key exists
-    // Actual failures will be caught during search attempts
-    return { healthy: true };
+    return this.basicHealthCheck(this.apiKey, 'SERPAPI_API_KEY');
   }
 
   /**

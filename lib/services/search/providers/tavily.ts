@@ -23,22 +23,11 @@ export class TavilySearchProvider extends BaseSearchProvider {
 
   /**
    * Check if Tavily is available
-   *
-   * Note: This is a lightweight check that doesn't make API calls.
-   * Actual availability is determined by trying the search request.
-   * This saves API quota by avoiding unnecessary test searches.
    */
   async isAvailable(): Promise<HealthCheckResult> {
-    if (!this.client || !process.env.TAVILY_API_KEY) {
-      return {
-        healthy: false,
-        message: 'TAVILY_API_KEY not configured',
-      };
-    }
-
-    // Assume healthy if client is initialized
-    // Actual failures will be caught during search attempts
-    return { healthy: true };
+    // Tavily stores client object instead of API key directly
+    // Cast to string to satisfy basicHealthCheck type signature
+    return this.basicHealthCheck(this.client ? 'configured' : undefined, 'TAVILY_API_KEY');
   }
 
   /**
