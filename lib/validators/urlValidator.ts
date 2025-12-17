@@ -13,6 +13,17 @@ import http from 'http';
 const MAX_URL_LENGTH = 500; // Maximum URL length to prevent abuse
 const DEFAULT_TEXT_MAX_LENGTH = 200; // Default max length for text inputs
 const DOMAIN_CHECK_TIMEOUT = 5000; // 5 second timeout for domain checks
+const DOMAIN_CACHE_TTL = 300000; // 5 minutes cache for domain validation
+
+/**
+ * Domain validation cache
+ */
+interface DomainCacheEntry {
+  result: DomainValidationResult;
+  expiry: number;
+}
+
+const domainCache = new Map<string, DomainCacheEntry>();
 
 /**
  * Sanitize URL input to prevent XSS and injection attacks
@@ -297,6 +308,7 @@ function findSimilarDomain(hostname: string): string | undefined {
  *
  * Performs DNS lookup and HTTP HEAD request to verify domain.
  * Provides fuzzy matching suggestions for common typos.
+ * Results are cached for 5 minutes to avoid redundant checks.
  *
  * @param url - URL to validate
  * @param language - Language for error messages ('sv' or 'en')
@@ -308,6 +320,14 @@ export async function validateDomainExists(
 ): Promise<DomainValidationResult> {
   try {
     const hostname = extractHostname(url);
+    const now = Date.now();
+
+    // Check cache first
+    const cached = domainCache.get(hostname);
+    if (cached && cached.expiry > now) {
+      console.log(`✅ Using cached domain validation for ${hostname}`);
+      return cached.result;
+    }
 
     // Step 1: DNS lookup
     const dnsExists = await checkDNS(hostname);
@@ -316,33 +336,39 @@ export async function validateDomainExists(
       // Try to find similar domain
       const suggestion = findSimilarDomain(hostname);
 
-      if (suggestion) {
-        return {
-          exists: false,
-          error:
-            language === 'sv'
-              ? `Domänen "${hostname}" hittades inte. Menade du "${suggestion}"?`
-              : `Domain "${hostname}" not found. Did you mean "${suggestion}"?`,
-          suggestion,
-          details: 'DNS_NOT_FOUND',
-        };
-      }
+      const result: DomainValidationResult = suggestion
+        ? {
+            exists: false,
+            error:
+              language === 'sv'
+                ? `Domänen "${hostname}" hittades inte. Menade du "${suggestion}"?`
+                : `Domain "${hostname}" not found. Did you mean "${suggestion}"?`,
+            suggestion,
+            details: 'DNS_NOT_FOUND',
+          }
+        : {
+            exists: false,
+            error:
+              language === 'sv'
+                ? `Domänen "${hostname}" hittades inte. Kontrollera stavningen och försök igen.`
+                : `Domain "${hostname}" not found. Please check the spelling and try again.`,
+            details: 'DNS_NOT_FOUND',
+          };
 
-      return {
-        exists: false,
-        error:
-          language === 'sv'
-            ? `Domänen "${hostname}" hittades inte. Kontrollera stavningen och försök igen.`
-            : `Domain "${hostname}" not found. Please check the spelling and try again.`,
-        details: 'DNS_NOT_FOUND',
-      };
+      // Cache the negative result
+      domainCache.set(hostname, {
+        result,
+        expiry: now + DOMAIN_CACHE_TTL,
+      });
+
+      return result;
     }
 
     // Step 2: HTTP accessibility check
     const httpAccessible = await checkHTTP(url);
 
     if (!httpAccessible) {
-      return {
+      const result: DomainValidationResult = {
         exists: false,
         error:
           language === 'sv'
@@ -350,10 +376,24 @@ export async function validateDomainExists(
             : `Website "${hostname}" is not responding. It may be offline or inaccessible.`,
         details: 'HTTP_NOT_ACCESSIBLE',
       };
+
+      // Cache the negative result (shorter TTL for offline sites)
+      domainCache.set(hostname, {
+        result,
+        expiry: now + 60000, // 1 minute for offline sites (might come back online)
+      });
+
+      return result;
     }
 
-    // Domain exists and is accessible
-    return { exists: true };
+    // Domain exists and is accessible - cache the positive result
+    const result: DomainValidationResult = { exists: true };
+    domainCache.set(hostname, {
+      result,
+      expiry: now + DOMAIN_CACHE_TTL,
+    });
+
+    return result;
   } catch (error) {
     // Validation error - return generic message
     return {

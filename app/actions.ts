@@ -98,7 +98,23 @@ export async function analyzeUrl(
     // Sanitize advanced parameters to prevent prompt injection
     const sanitizedParams = advancedParams ? sanitizeAdvancedParams(advancedParams) : undefined;
 
-    // STEP 3.5: VALIDATE DOMAIN EXISTS
+    // STEP 4: CHECK CACHE
+    // Note: Cache check before domain validation to avoid unnecessary validation
+    // for repeated requests (rate limited users can still benefit from cache)
+    const cacheKey = generateCacheKey(url, sanitizedParams, language);
+    const cachedResult = analysisCache.get(cacheKey);
+
+    if (cachedResult) {
+      const duration = Date.now() - startTime;
+      logger.analysisComplete(url, duration, true);
+      return cachedResult;
+    }
+
+    logger.cacheMiss(cacheKey);
+
+    // STEP 4.5: VALIDATE DOMAIN EXISTS
+    // Note: Domain validation happens AFTER rate limiting and cache check for security
+    // This prevents abuse where attackers spam DNS/HTTP checks without rate limits
     const domainValidation = await validateDomainExists(url, language);
 
     if (!domainValidation.exists) {
@@ -115,18 +131,6 @@ export async function analyzeUrl(
     }
 
     logger.info('Domain validation passed', { url });
-
-    // STEP 4: CHECK CACHE
-    const cacheKey = generateCacheKey(url, sanitizedParams, language);
-    const cachedResult = analysisCache.get(cacheKey);
-
-    if (cachedResult) {
-      const duration = Date.now() - startTime;
-      logger.analysisComplete(url, duration, true);
-      return cachedResult;
-    }
-
-    logger.cacheMiss(cacheKey);
 
     // STEP 5: INITIALIZE OPENAI CLIENT
     const openai = new OpenAI({

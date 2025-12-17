@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
@@ -79,6 +79,9 @@ export default function Home() {
   const [error, setError] = useState('');
   const [loadingMessage, setLoadingMessage] = useState('');
 
+  // Ref to track loading interval for cleanup
+  const loadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // Advanced Search State
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [contactPerson, setContactPerson] = useState('');
@@ -102,6 +105,16 @@ export default function Home() {
     localStorage.setItem('recon-language', lang);
   };
 
+  // Cleanup interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+        loadingIntervalRef.current = null;
+      }
+    };
+  }, []);
+
   // Get current translations
   const t = getTranslation(language);
 
@@ -115,7 +128,7 @@ export default function Home() {
 
     // Rotate loading messages
     let messageIndex = 0;
-    const messageInterval = setInterval(() => {
+    loadingIntervalRef.current = setInterval(() => {
       setLoadingMessage(t.loadingMessages[messageIndex % t.loadingMessages.length]);
       messageIndex++;
     }, 2000);
@@ -144,7 +157,11 @@ export default function Home() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t.errorGeneric);
     } finally {
-      clearInterval(messageInterval);
+      // Clean up interval
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+        loadingIntervalRef.current = null;
+      }
       setLoading(false);
       setLoadingMessage('');
     }

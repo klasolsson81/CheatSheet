@@ -1,12 +1,14 @@
 # Code Review #2 - 2025-12-17
 
-**Status:** In Progress (3/15 Issues Fixed)
+**Status:** In Progress (6/15 Issues Fixed - 40% Complete)
 **Reviewer:** Claude Code (Automated Review)
 **Focus Areas:** Security, Performance, Code Quality, Architecture, TypeScript, UX
 
 ---
 
-## ✅ COMPLETED FIXES (Session 1)
+## ✅ COMPLETED FIXES
+
+### Session 1 - Performance Optimization (3 fixes)
 
 ### Issue #1: Health Check Performance ✅ FIXED
 - **Status:** ✅ Completed
@@ -48,6 +50,46 @@
 - **Result:** No API quota wasted on health checks
 
 **Total Performance Gain:** ~70% faster searches + 50% less API usage 🚀
+
+### Session 2 - Security & Stability (3 fixes)
+
+### Issue #11: Memory Leak in Loading Interval ✅ FIXED
+- **Status:** ✅ Completed
+- **Impact:** Prevents memory leaks on component unmount
+- **Changes:**
+  - Added `loadingIntervalRef` using useRef
+  - Added cleanup in useEffect on component unmount
+  - Proper interval cleanup in finally block
+  - No more orphaned intervals in memory
+- **Files Modified:**
+  - `app/page.tsx` - Added useRef and cleanup logic
+- **Result:** Component safely cleans up intervals when unmounting
+
+### Issue #4: Domain Validation Before Rate Limiting (Security) ✅ FIXED
+- **Status:** ✅ Completed
+- **Impact:** Prevents DNS/HTTP check abuse bypassing rate limits
+- **Problem:** Attackers could spam domain validation without rate limits
+- **Changes:**
+  - Moved domain validation from STEP 3.5 to STEP 4.5
+  - Now validates AFTER rate limiting and cache check
+  - Order: Rate Limit → Cache → Domain Validation → Analysis
+- **Files Modified:**
+  - `app/actions.ts` - Reordered validation steps
+- **Result:** Domain validation protected by rate limiting
+
+### Issue #13: Domain Validation Caching ✅ FIXED
+- **Status:** ✅ Completed
+- **Impact:** Faster validation for repeated domains, reduces DNS/HTTP load
+- **Changes:**
+  - Added `domainCache: Map<string, DomainCacheEntry>`
+  - Cache TTL: 5 minutes for valid/invalid domains
+  - Cache TTL: 1 minute for offline sites (may come back)
+  - Cache key: hostname (extracted from URL)
+- **Files Modified:**
+  - `lib/validators/urlValidator.ts` - Added caching logic
+- **Result:** Second check of same domain = instant (cached)
+
+**Session 2 Impact:** Better security + stability + faster repeated validations 🛡️
 
 ---
 
