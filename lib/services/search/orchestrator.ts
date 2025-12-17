@@ -40,14 +40,21 @@ class SearchOrchestrator {
   private providers: BaseSearchProvider[] = [];
   private stats: Map<string, ProviderStats> = new Map();
   private healthCache: Map<string, HealthCacheEntry> = new Map();
-  private initialized = false;
+  private initPromise: Promise<void> | null = null;
   private readonly HEALTH_CACHE_TTL = 300000; // 5 minutes in milliseconds
+
+  /**
+   * Constructor - start initialization immediately
+   */
+  constructor() {
+    // Start initialization on first instantiation
+    this.initPromise = this.doInitialization();
+  }
 
   /**
    * Initialize all available providers
    */
-  async initialize(): Promise<void> {
-    if (this.initialized) return;
+  private async doInitialization(): Promise<void> {
 
     const providers: BaseSearchProvider[] = [];
 
@@ -109,8 +116,17 @@ class SearchOrchestrator {
     logger.info(`Search orchestrator initialized with ${this.providers.length} providers`, {
       providers: this.providers.map((p) => ({ name: p.getName(), priority: p.getPriority() })),
     });
+  }
 
-    this.initialized = true;
+  /**
+   * Ensure orchestrator is initialized (fast path after first initialization)
+   */
+  private async ensureInitialized(): Promise<void> {
+    if (this.initPromise) {
+      await this.initPromise;
+      // Clear promise after first initialization for minimal overhead
+      this.initPromise = null;
+    }
   }
 
   /**
@@ -202,7 +218,7 @@ class SearchOrchestrator {
    * @throws Error if all providers fail
    */
   async search(query: string, options?: SearchOptions): Promise<SearchResponse> {
-    await this.initialize();
+    await this.ensureInitialized();
 
     const errors: Array<{ provider: string; error: string }> = [];
 
@@ -274,7 +290,7 @@ class SearchOrchestrator {
    * @throws Error if extraction fails
    */
   async extract(url: string): Promise<string> {
-    await this.initialize();
+    await this.ensureInitialized();
 
     // Find Tavily provider (only one with extraction support)
     const tavilyProvider = this.providers.find((p) => p.getName() === 'Tavily');

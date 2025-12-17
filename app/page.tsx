@@ -82,6 +82,9 @@ export default function Home() {
   // Ref to track loading interval for cleanup
   const loadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Ref for advanced search focus management
+  const advancedSearchRef = useRef<HTMLDivElement>(null);
+
   // Advanced Search State
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [contactPerson, setContactPerson] = useState('');
@@ -301,7 +304,15 @@ export default function Home() {
             <div className="relative z-20 mt-3 flex justify-center">
               <button
                 type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
+                onClick={() => {
+                  setShowAdvanced(!showAdvanced);
+                  // Focus first input when opening advanced search
+                  if (!showAdvanced) {
+                    setTimeout(() => {
+                      advancedSearchRef.current?.querySelector<HTMLInputElement>('input')?.focus();
+                    }, 300); // Wait for animation
+                  }
+                }}
                 className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-300 hover:text-white transition-colors cursor-pointer font-mono tracking-wider uppercase"
                 aria-label="Toggle advanced search options"
                 aria-expanded={showAdvanced}
@@ -316,6 +327,7 @@ export default function Home() {
             <AnimatePresence>
               {showAdvanced && (
                 <motion.div
+                  ref={advancedSearchRef}
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
@@ -431,14 +443,19 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className="flex flex-col items-center justify-center py-20"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
             >
-              <Loader2 className="w-16 h-16 text-emerald-500 animate-spin mb-6" />
+              <Loader2 className="w-16 h-16 text-emerald-500 animate-spin mb-6" aria-hidden="true" />
+              <span className="sr-only">{t.analyzingButton}</span>
               <motion.p
                 key={loadingMessage}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="text-sm text-slate-200 font-mono tracking-wider uppercase"
+                aria-label={loadingMessage}
               >
                 {loadingMessage}
               </motion.p>

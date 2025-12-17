@@ -323,23 +323,61 @@ async function checkHTTP(url: string): Promise<boolean> {
 /**
  * Find similar domain suggestions using fuzzy matching
  *
+ * Handles common domain mistakes:
+ * 1. Numbers in domain (klasolsson81.se → klasolsson.se)
+ * 2. TLD mistakes (.com → .se for Swedish context, .se → .com for international)
+ * 3. www prefix issues
+ * 4. Hyphenation issues
+ *
  * @param hostname - Invalid hostname
  * @returns Suggested similar hostname or undefined
  */
 function findSimilarDomain(hostname: string): string | undefined {
-  // Common Swedish company domains to check
-  const commonDomains = [
-    hostname.replace(/\d+/g, ''), // Remove numbers (klasolsson81.se → klasolsson.se)
-    hostname.replace(/www\./g, ''),
-    hostname.replace(/-/g, ''),
-  ];
-
-  // Check if removing numbers makes a valid-looking domain
+  // 1. Try removing numbers (most common Swedish company issue)
   const withoutNumbers = hostname.replace(/\d+/g, '');
   if (withoutNumbers !== hostname && withoutNumbers.includes('.')) {
     return withoutNumbers;
   }
 
+  // 2. Check common TLD mistakes
+  const [domain, tld] = hostname.split('.');
+  if (domain && tld) {
+    // Swedish context: Try .se if they used .com
+    if (tld === 'com') {
+      return `${domain}.se`;
+    }
+
+    // International context: Try .com if they used .se
+    if (tld === 'se') {
+      return `${domain}.com`;
+    }
+
+    // Other common TLD typos
+    const tldMap: Record<string, string> = {
+      'net': 'com',
+      'org': 'com',
+      'io': 'com',
+      'co': 'com',
+    };
+
+    if (tld in tldMap) {
+      return `${domain}.${tldMap[tld]}`;
+    }
+  }
+
+  // 3. Try removing www prefix if present
+  const withoutWww = hostname.replace(/^www\./g, '');
+  if (withoutWww !== hostname) {
+    return withoutWww;
+  }
+
+  // 4. Try common hyphenation issues (remove single hyphens)
+  const withoutHyphens = hostname.replace(/-/g, '');
+  if (withoutHyphens !== hostname && withoutHyphens.includes('.')) {
+    return withoutHyphens;
+  }
+
+  // No suggestions found
   return undefined;
 }
 
