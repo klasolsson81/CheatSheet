@@ -29,6 +29,25 @@ function getCurrentMonths(): string {
 }
 
 /**
+ * Validate and sanitize search query component
+ *
+ * @param value - Query component to validate
+ * @param maxLength - Maximum allowed length
+ * @returns Validated and truncated string
+ */
+function validateQueryComponent(value: string | undefined, maxLength: number = 100): string {
+  if (!value) return '';
+
+  const trimmed = value.trim();
+
+  // Reject if too short (less than 2 chars)
+  if (trimmed.length < 2) return '';
+
+  // Truncate if too long
+  return trimmed.slice(0, maxLength);
+}
+
+/**
  * Execute multi-source parallel research
  *
  * Performs 6 parallel searches to gather comprehensive company intelligence.
@@ -58,18 +77,21 @@ export async function performMultiSourceResearch(
     specificFocus?: string;
   }
 ): Promise<ResearchData> {
-  // Build targeted search context
-  const hasAdvanced = sanitizedParams && Object.keys(sanitizedParams).length > 0;
+  // Validate and sanitize all input components
+  const validCompanyName = validateQueryComponent(companyName, 100);
+  const validContactPerson = validateQueryComponent(sanitizedParams?.contactPerson, 100);
+  const validJobTitle = validateQueryComponent(sanitizedParams?.jobTitle, 100);
+  const validDepartment = validateQueryComponent(sanitizedParams?.department, 100);
+  const validLocation = validateQueryComponent(sanitizedParams?.location, 100);
+  const validSpecificFocus = validateQueryComponent(sanitizedParams?.specificFocus, 200);
+
+  // Build targeted search context from validated components
+  const hasAdvanced = validContactPerson || validJobTitle || validDepartment || validLocation;
   const targetContext = hasAdvanced
-    ? [
-        sanitizedParams.contactPerson,
-        sanitizedParams.jobTitle,
-        sanitizedParams.department,
-        sanitizedParams.location,
-      ].filter(Boolean).join(' ')
+    ? [validContactPerson, validJobTitle, validDepartment, validLocation].filter(Boolean).join(' ')
     : '';
 
-  console.log(`🔍 Starting research for: ${companyName} ${hasAdvanced ? '(targeted)' : ''}`);
+  console.log(`🔍 Starting research for: ${validCompanyName || 'company'} ${hasAdvanced ? '(targeted)' : ''}`);
 
   // PARALLEL RESEARCH: 6 data streams
   const [websiteData, leadershipData, socialData, newsData, financialData, signalsData] =
@@ -80,9 +102,9 @@ export async function performMultiSourceResearch(
       // 2. Leadership & Key People Research
       searchOrchestrator
         .search(
-          hasAdvanced && sanitizedParams.contactPerson
-            ? `${sanitizedParams.contactPerson} ${companyName} LinkedIn ${sanitizedParams.location || ''} ${sanitizedParams.jobTitle || ''} 2025`
-            : `${companyName} ${targetContext} CEO founder leadership team LinkedIn 2025`,
+          validContactPerson
+            ? `${validContactPerson} ${validCompanyName} LinkedIn ${validLocation} ${validJobTitle} 2025`
+            : `${validCompanyName} ${targetContext} CEO founder leadership team LinkedIn 2025`,
           {
             maxResults: SEARCH_LIMITS.LEADERSHIP,
             searchDepth: 'advanced',
@@ -96,9 +118,9 @@ export async function performMultiSourceResearch(
       // 3. Social Media & Personal Activity
       searchOrchestrator
         .search(
-          hasAdvanced && sanitizedParams.contactPerson
-            ? `${sanitizedParams.contactPerson} LinkedIn post ${sanitizedParams.specificFocus || ''} ${getCurrentMonths()} 2025`
-            : `${companyName} ${targetContext} LinkedIn post recent ${getCurrentMonths()} 2025`,
+          validContactPerson
+            ? `${validContactPerson} LinkedIn post ${validSpecificFocus} ${getCurrentMonths()} 2025`
+            : `${validCompanyName} ${targetContext} LinkedIn post recent ${getCurrentMonths()} 2025`,
           {
             maxResults: SEARCH_LIMITS.SOCIAL_MEDIA,
             searchDepth: 'advanced',
@@ -111,7 +133,7 @@ export async function performMultiSourceResearch(
 
       // 4. Recent News & Press Releases
       searchOrchestrator
-        .search(`${companyName} news press release announcement 2025`, {
+        .search(`${validCompanyName} news press release announcement 2025`, {
           maxResults: SEARCH_LIMITS.NEWS,
           searchDepth: 'advanced',
         })
@@ -123,7 +145,7 @@ export async function performMultiSourceResearch(
       // 5. Financial Results & Reports (with Swedish company optimization)
       Promise.all([
         // General financial search
-        searchOrchestrator.search(`${companyName} financial results quarterly earnings revenue 2024 2025`, {
+        searchOrchestrator.search(`${validCompanyName} financial results quarterly earnings revenue 2024 2025`, {
           maxResults: SEARCH_LIMITS.FINANCIALS_GENERAL,
           searchDepth: 'advanced',
         }),
@@ -152,7 +174,7 @@ export async function performMultiSourceResearch(
 
       // 6. Growth Signals (Hiring, Funding, Expansion)
       searchOrchestrator
-        .search(`${companyName} hiring jobs funding expansion partnership 2025`, {
+        .search(`${validCompanyName} hiring jobs funding expansion partnership 2025`, {
           maxResults: SEARCH_LIMITS.GROWTH_SIGNALS,
           searchDepth: 'advanced',
         })

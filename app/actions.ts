@@ -211,9 +211,50 @@ export async function analyzeUrl(
       throw error;
     }
 
-    // Handle known API errors
+    // Handle known API errors by type and error codes
     if (error instanceof Error) {
-      // Tavily API usage limit
+      // Check for OpenAI API errors (use OpenAI SDK error types)
+      if ('error' in error && typeof (error as any).error === 'object') {
+        const apiError = (error as any).error;
+
+        // OpenAI rate limit or quota errors
+        if (apiError.type === 'insufficient_quota' || apiError.code === 'rate_limit_exceeded') {
+          throw new APIError(
+            'OpenAI',
+            language === 'sv'
+              ? 'AI-tjänsten har nått sin gräns. Försök igen om en stund.'
+              : 'AI service rate limit reached. Please try again in a moment.',
+            error.message,
+            { errorType: apiError.type, errorCode: apiError.code }
+          );
+        }
+
+        // OpenAI authentication errors
+        if (apiError.type === 'invalid_request_error' || apiError.code === 'invalid_api_key') {
+          throw new APIError(
+            'OpenAI',
+            language === 'sv'
+              ? 'AI-tjänsten är felkonfigurerad. Kontakta support.'
+              : 'AI service misconfigured. Please contact support.',
+            error.message,
+            { errorType: apiError.type, errorCode: apiError.code }
+          );
+        }
+      }
+
+      // Check for network/timeout errors by error code
+      const errorCode = (error as any).code;
+      if (errorCode === 'ETIMEDOUT' || errorCode === 'ECONNREFUSED' || errorCode === 'ENOTFOUND') {
+        throw new AnalysisError(
+          language === 'sv'
+            ? 'Nätverksfel. Kontrollera din anslutning och försök igen.'
+            : 'Network error. Please check your connection and try again.',
+          error.message,
+          { errorCode }
+        );
+      }
+
+      // Search API usage limit (check message as fallback for external APIs)
       if (error.message.includes('usage limit') || error.message.includes("plan's set usage")) {
         throw new APIError(
           'Tavily',
@@ -225,19 +266,7 @@ export async function analyzeUrl(
         );
       }
 
-      // OpenAI API errors
-      if (error.message.includes('OpenAI') || error.message.includes('gpt')) {
-        throw new APIError(
-          'OpenAI',
-          language === 'sv'
-            ? 'AI-tjänsten är tillfälligt otillgänglig. Försök igen om en stund.'
-            : 'AI service temporarily unavailable. Please try again in a moment.',
-          error.message,
-          { originalError: error.message }
-        );
-      }
-
-      // Generic analysis error
+      // Generic analysis error (last resort)
       throw new AnalysisError(
         language === 'sv'
           ? 'Kunde inte slutföra analysen. Försök igen eller kontakta support.'

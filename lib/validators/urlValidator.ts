@@ -222,21 +222,47 @@ function extractHostname(url: string): string {
 }
 
 /**
- * Check if domain exists via DNS lookup
+ * Check if domain exists via DNS lookup with timeout
+ *
+ * Note: Promise.race doesn't cancel the DNS lookup, but ensures we don't wait forever.
+ * The DNS lookup may continue in background but we return control to caller.
  *
  * @param hostname - Domain hostname to check
- * @returns true if DNS resolves, false otherwise
+ * @returns true if DNS resolves within timeout, false otherwise
  */
 async function checkDNS(hostname: string): Promise<boolean> {
   try {
-    await Promise.race([
-      dns.resolve(hostname),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('DNS timeout')), DOMAIN_CHECK_TIMEOUT)
-      ),
+    let timeoutId: NodeJS.Timeout;
+
+    const result = await Promise.race([
+      dns.resolve(hostname).then((addresses) => {
+        // Clear timeout on success
+        if (timeoutId) clearTimeout(timeoutId);
+        return { success: true, addresses };
+      }),
+      new Promise<{ success: false; reason: string }>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject({ success: false, reason: 'DNS_TIMEOUT' });
+        }, DOMAIN_CHECK_TIMEOUT);
+      }),
     ]);
-    return true;
-  } catch {
+
+    return result.success;
+  } catch (error) {
+    // DNS lookup failed or timed out
+    const errorCode = (error as any).code;
+
+    // Differentiate between timeout and DNS errors
+    if ((error as any).reason === 'DNS_TIMEOUT') {
+      console.log(`⏱️ DNS timeout for ${hostname} (${DOMAIN_CHECK_TIMEOUT}ms)`);
+      return false;
+    }
+
+    // DNS resolution failed (ENOTFOUND, ESERVFAIL, etc.)
+    if (errorCode) {
+      console.log(`❌ DNS lookup failed for ${hostname}: ${errorCode}`);
+    }
+
     return false;
   }
 }
@@ -245,7 +271,7 @@ async function checkDNS(hostname: string): Promise<boolean> {
  * Check if domain is accessible via HTTP/HTTPS HEAD request
  *
  * @param url - Full URL to check
- * @returns true if accessible, false otherwise
+ * @returns true if accessible (status < 500), false otherwise
  */
 async function checkHTTP(url: string): Promise<boolean> {
   return new Promise((resolve) => {
@@ -263,18 +289,32 @@ async function checkHTTP(url: string): Promise<boolean> {
           },
         },
         (res) => {
-          // Accept any response (even errors) as long as server responds
-          resolve(res.statusCode !== undefined && res.statusCode < 500);
+          // Accept any response < 500 (2xx, 3xx, 4xx are all valid responses)
+          // Status >= 500 means server error (not accessible)
+          const accessible = res.statusCode !== undefined && res.statusCode < 500;
+
+          if (!accessible) {
+            console.log(`⚠️ HTTP check failed for ${url}: Status ${res.statusCode}`);
+          }
+
+          resolve(accessible);
         }
       );
 
-      req.on('error', () => resolve(false));
+      req.on('error', (err) => {
+        console.log(`❌ HTTP request failed for ${url}: ${err.message}`);
+        resolve(false);
+      });
+
       req.on('timeout', () => {
+        console.log(`⏱️ HTTP timeout for ${url} (${DOMAIN_CHECK_TIMEOUT}ms)`);
         req.destroy();
         resolve(false);
       });
+
       req.end();
-    } catch {
+    } catch (error) {
+      console.log(`❌ HTTP check exception for ${url}:`, error);
       resolve(false);
     }
   });
